@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>O Chamado de Londres — Arquivo dos Investigadores</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --parchment: #f0e6c8;
+      --parchment-dark: #d4c49a;
+      --parchment-darker: #b8a070;
+      --ink: #1a1208;
+      --ink-faded: #3d2e0f;
+      --ink-light: #5c4a1e;
+      --blood: #6b1a1a;
+      --blood-dark: #4a0f0f;
+      --gold: #8b6914;
+      --gold-light: #c49a2a;
+      --shadow: rgba(10, 5, 0, 0.7);
+      --candle: #f5c842;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #0d0a05;
+      background-image: 
+        radial-gradient(ellipse at 20% 50%, rgba(91, 50, 10, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(91, 30, 10, 0.1) 0%, transparent 50%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      font-family: 'Crimson Text', Georgia, serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ===== TELA DE LOGIN ===== */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .login-card {
+      background: var(--parchment);
+      background-image: 
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
+        linear-gradient(135deg, #f5ead0 0%, #e8d8a8 50%, #dcc888 100%);
+      border: 2px solid var(--parchment-darker);
+      box-shadow: 
+        0 0 0 1px var(--gold),
+        0 0 40px rgba(139, 105, 20, 0.3),
+        0 20px 60px rgba(0,0,0,0.8),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      border-radius: 2px;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 8px; left: 8px; right: 8px; bottom: 8px;
+      border: 1px solid var(--parchment-darker);
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    .login-ornament {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      color: var(--blood);
+      font-size: 1.5rem;
+      letter-spacing: 0.5rem;
+    }
+
+    .login-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--ink);
+      letter-spacing: 0.1em;
+      line-height: 1.3;
+      margin-bottom: 0.25rem;
+    }
+
+    .login-subtitle {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      text-align: center;
+      color: var(--ink-light);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    .divider {
+      text-align: center;
+      color: var(--gold);
+      margin: 1rem 0;
+      font-size: 0.8rem;
+      letter-spacing: 0.3rem;
+    }
+
+    .tab-group {
+      display: flex;
+      border-bottom: 2px solid var(--parchment-darker);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 0.6rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-light);
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+
+    .tab-btn.active {
+      color: var(--blood);
+      border-bottom-color: var(--blood);
+    }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-label {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--ink-faded);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255,255,255,0.4);
+      border: 1px solid var(--parchment-darker);
+      border-bottom: 2px solid var(--gold);
+      padding: 0.6rem 0.8rem;
+      font-family: 'Crimson Text', serif;
+      font-size: 1rem;
+      color: var(--ink);
+      outline: none;
+      transition: all 0.2s;
+      border-radius: 1px;
+    }
+
+    .form-input:focus {
+      border-bottom-color: var(--blood);
+      background: rgba(255,255,255,0.6);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--blood-dark);
+      background-image: linear-gradient(135deg, var(--blood) 0%, var(--blood-dark) 100%);
+      border: 1px solid var(--blood-dark);
+      color: var(--parchment);
+      padding: 0.75rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      margin-top: 0.5rem;
+      box-shadow: 0 4px 15px rgba(107, 26, 26, 0.4);
+    }
+
+    .btn-primary:hover {
+      background-image: linear-gradient(135deg, #7d1f1f 0%, var(--blood) 100%);
+      box-shadow: 0 6px 20px rgba(107, 26, 26, 0.5);
+    }
+
+    .error-msg {
+      background: rgba(107, 26, 26, 0.1);
+      border-left: 3px solid var(--blood);
+      padding: 0.6rem 0.8rem;
+      font-size: 0.9rem;
+      color: var(--blood-dark);
+      margin-top: 0.8rem;
+      display: none;
+    }
+
+    /* ===== APP PRINCIPAL ===== */
+    #app {
+      display: none;
+      min-height: 100vh;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      background: linear-gradient(180deg, #1a0f05 0%, #0d0a05 100%);
+      border-bottom: 1px solid var(--gold);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 20px rgba(139, 105, 20, 0.2);
+    }
+
+    .navbar-brand {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .navbar-brand span {
+      color: var(--parchment-dark);
+      font-weight: 400;
+    }
+
+    .navbar-nav {
+      display: flex;
+      gap: 0.5rem;
+      list-style: none;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--parchment-dark);
+      padding: 0.4rem 0.9rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+
+    .nav-btn.guardian {
+      border-color: var(--blood);
+      color: #c07070;
+    }
+
+    .nav-btn.guardian:hover {
+      background: rgba(107, 26, 26, 0.2);
+    }
+
+    .nav-logout {
+      color: var(--ink-light);
+      font-size: 0.7rem;
+    }
+
+    /* CONTEÚDO */
+    .page {
+      display: none;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .page.active { display: block; }
+
+    .page-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      color: var(--gold-light);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.25rem;
+    }
+
+    .page-subtitle {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      color: var(--parchment-darker);
+      margin-bottom: 2rem;
+      font-size: 1rem;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid var(--gold);
+      margin: 2rem 0;
+      opacity: 0.4;
+    }
+
+    /* CARD DE PERSONAGEM */
+    .character-card {
+      background: var(--parchment);
+      background-image: linear-gradient(135deg, #f5ead0 0%, #e8d8a8 100%);
+      border: 1px solid var(--parchment-darker);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      padding: 2rem;
+      position: relative;
+    }
+
+    .character-card::before {
+      content: '';
+      position: absolute;
+      top: 6px; left: 6px; right: 6px; bottom: 6px;
+      border: 1px solid rgba(184, 160, 112, 0.4);
+      pointer-events: none;
+    }
+
+    .char-header {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+    }
+
+    .char-avatar {
+      width: 110px;
+      height: 140px;
+      object-fit: cover;
+      border: 2px solid var(--parchment-darker);
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+
+    .char-avatar-placeholder {
+      width: 110px;
+      height: 140px;
+      background: var(--parchment-dark);
+      border: 2px dashed var(--parchment-darker);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-light);
+      text-align: center;
+      padding: 0.5rem;
+    }
+
+    .char-avatar-placeholder:hover {
+      border-color: var(--gold);
+      background: #c8b878;
+    }
+
+    .char-avatar-placeholder .icon { font-size: 2rem; }
+
+    .char-info { flex: 1; }
+
+    .char-name-input {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--ink);
+      background: none;
+      border: none;
+      border-bottom: 2px solid var(--parchment-darker);
+      width: 100%;
+      outline: none;
+      padding-bottom: 0.3rem;
+      margin-bottom: 0.5rem;
+      transition: border-color 0.2s;
+    }
+
+    .char-name-input:focus { border-bottom-color: var(--blood); }
+
+    .char-occupation-input {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--ink-light);
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--parchment-darker);
+      width: 100%;
+      outline: none;
+      padding-bottom: 0.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .char-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem 1rem;
+    }
+
+    .char-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .char-field label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-light);
+      text-transform: uppercase;
+      margin-bottom: 0.15rem;
+    }
+
+    .char-field input {
+      font-family: 'Crimson Text', serif;
+      font-size: 0.95rem;
+      color: var(--ink);
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--parchment-darker);
+      outline: none;
+      padding: 0.1rem 0;
+    }
+
+    /* UPLOAD DE FICHA */
+    .ficha-section {
+      margin-top: 1.5rem;
+    }
+
+    .ficha-section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      color: var(--ink-faded);
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+      border-bottom: 1px solid var(--parchment-darker);
+      padding-bottom: 0.4rem;
+    }
+
+    .ficha-upload-area {
+      border: 2px dashed var(--parchment-darker);
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .ficha-upload-area:hover {
+      border-color: var(--gold);
+      background: rgba(255,255,255,0.3);
+    }
+
+    .ficha-upload-area .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+    .ficha-upload-text {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-light);
+      text-transform: uppercase;
+    }
+
+    .ficha-uploaded {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      background: rgba(139, 105, 20, 0.1);
+      border: 1px solid var(--gold);
+    }
+
+    .ficha-uploaded .icon { font-size: 1.5rem; }
+
+    .ficha-uploaded-name {
+      font-family: 'Crimson Text', serif;
+      font-size: 1rem;
+      color: var(--ink);
+      flex: 1;
+    }
+
+    .btn-small {
+      background: none;
+      border: 1px solid var(--parchment-darker);
+      padding: 0.3rem 0.7rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      color: var(--ink-faded);
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .btn-small:hover { border-color: var(--blood); color: var(--blood); }
+
+    .btn-small.primary-small {
+      background: var(--blood-dark);
+      border-color: var(--blood-dark);
+      color: var(--parchment);
+    }
+
+    .btn-small.primary-small:hover { background: var(--blood); }
+
+    .btn-save {
+      margin-top: 1.5rem;
+      background: var(--ink);
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      padding: 0.7rem 2rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      float: right;
+    }
+
+    .btn-save:hover { background: var(--ink-faded); }
+
+    /* NOTAS */
+    .notes-list { display: flex; flex-direction: column; gap: 1rem; }
+
+    .note-card {
+      background: var(--parchment);
+      background-image: linear-gradient(135deg, #f5ead0 0%, #e8d8a8 100%);
+      border: 1px solid var(--parchment-darker);
+      border-left: 4px solid var(--blood);
+      padding: 1.2rem 1.5rem;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .note-session {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--blood);
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .note-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .note-content {
+      font-family: 'Crimson Text', serif;
+      font-size: 1rem;
+      color: var(--ink-faded);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .note-date {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--ink-light);
+      margin-top: 0.8rem;
+      text-align: right;
+    }
+
+    /* FORMULÁRIO DE NOVA NOTA */
+    .note-form {
+      background: var(--parchment);
+      background-image: linear-gradient(135deg, #f5ead0 0%, #e8d8a8 100%);
+      border: 1px solid var(--parchment-darker);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 2px 2px 15px rgba(0,0,0,0.4);
+    }
+
+    .note-form-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      color: var(--ink-faded);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .note-form input, .note-form textarea, .note-form select {
+      width: 100%;
+      background: rgba(255,255,255,0.4);
+      border: 1px solid var(--parchment-darker);
+      border-bottom: 2px solid var(--gold);
+      padding: 0.6rem 0.8rem;
+      font-family: 'Crimson Text', serif;
+      font-size: 1rem;
+      color: var(--ink);
+      outline: none;
+      margin-bottom: 0.8rem;
+      resize: vertical;
+    }
+
+    .note-form textarea { min-height: 100px; }
+
+    /* PAINEL DO GUARDIÃO */
+    .guardian-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .player-card {
+      background: var(--parchment);
+      background-image: linear-gradient(135deg, #f5ead0 0%, #e8d8a8 100%);
+      border: 1px solid var(--parchment-darker);
+      box-shadow: 3px 3px 15px rgba(0,0,0,0.4);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .player-card:hover {
+      box-shadow: 5px 5px 25px rgba(0,0,0,0.6);
+      transform: translateY(-2px);
+    }
+
+    .player-card-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      object-position: top;
+    }
+
+    .player-card-img-placeholder {
+      width: 100%;
+      height: 160px;
+      background: var(--parchment-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: var(--parchment-darker);
+    }
+
+    .player-card-body { padding: 1rem; }
+
+    .player-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      color: var(--ink);
+      margin-bottom: 0.2rem;
+    }
+
+    .player-card-occupation {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--ink-light);
+      margin-bottom: 0.8rem;
+    }
+
+    .player-card-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--parchment);
+      background-image: linear-gradient(135deg, #f5ead0 0%, #e8d8a8 100%);
+      border: 2px solid var(--parchment-darker);
+      box-shadow: 0 0 0 1px var(--gold), 0 20px 60px rgba(0,0,0,0.8);
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--ink-light);
+    }
+
+    .modal-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      color: var(--ink);
+      margin-bottom: 1.5rem;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--ink);
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      padding: 0.8rem 1.5rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      z-index: 300;
+      transform: translateY(100px);
+      transition: transform 0.3s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .toast.show { transform: translateY(0); }
+
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      color: var(--parchment-darker);
+      font-size: 1.1rem;
+    }
+
+    /* BADGE GUARDIÃO */
+    .guardian-badge {
+      display: inline-block;
+      background: var(--blood-dark);
+      color: var(--parchment);
+      font-family: 'Cinzel', serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      padding: 0.2rem 0.5rem;
+      text-transform: uppercase;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 600px) {
+      .page { padding: 1rem; }
+      .char-fields { grid-template-columns: 1fr; }
+      .navbar { padding: 0 1rem; }
+      .navbar-brand { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-ornament">✦ ✦ ✦</div>
+    <h1 class="login-title">O Chamado de Londres</h1>
+    <p class="login-subtitle">Arquivo dos Investigadores — Anno Domini 1923</p>
+    <div class="divider">— ✦ —</div>
+
+    <div class="tab-group">
+      <button class="tab-btn active" onclick="switchTab('login')">Entrar</button>
+      <button class="tab-btn" onclick="switchTab('register')">Registrar</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="tab-login">
+      <div class="form-group">
+        <label class="form-label">Endereço de Correio</label>
+        <input class="form-input" type="email" id="login-email" placeholder="seu@email.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha Secreta</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••" />
+      </div>
+      <button class="btn-primary" onclick="doLogin()">▶ Adentrar o Arquivo</button>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="tab-register" class="hidden">
+      <div class="form-group">
+        <label class="form-label">Seu Nome</label>
+        <input class="form-input" type="text" id="reg-name" placeholder="Nome do jogador" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Endereço de Correio</label>
+        <input class="form-input" type="email" id="reg-email" placeholder="seu@email.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha Secreta</label>
+        <input class="form-input" type="password" id="reg-password" placeholder="mín. 6 caracteres" />
+      </div>
+      <button class="btn-primary" onclick="doRegister()">▶ Criar Registro</button>
+    </div>
+
+    <div class="error-msg" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="app">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      O Chamado de Londres <span>// Arquivo</span>
+    </div>
+    <ul class="navbar-nav">
+      <li><button class="nav-btn active" onclick="showPage('character')">Personagem</button></li>
+      <li><button class="nav-btn" onclick="showPage('notes')">Notas</button></li>
+      <li id="guardian-nav-btn" class="hidden">
+        <button class="nav-btn guardian" onclick="showPage('guardian')">⚔ Guardião</button>
+      </li>
+      <li><button class="nav-btn nav-logout" onclick="doLogout()">Sair</button></li>
+    </ul>
+  </nav>
+
+  <!-- PÁGINA: PERSONAGEM -->
+  <div class="page active" id="page-character">
+    <h2 class="page-title">Ficha do Investigador <span id="guardian-badge-char" class="guardian-badge hidden">Guardião</span></h2>
+    <p class="page-subtitle">Registre aqui os dados do seu personagem e faça upload da ficha de jogo.</p>
+
+    <div class="character-card">
+      <div class="char-header">
+        <div id="avatar-container">
+          <div class="char-avatar-placeholder" onclick="document.getElementById('avatar-input').click()">
+            <span class="icon">🖼</span>
+            <span>Clique para<br>adicionar foto</span>
+          </div>
+          <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="handleAvatarChange(event)" />
+        </div>
+        <div class="char-info">
+          <input class="char-name-input" type="text" id="char-name" placeholder="Nome do Investigador" />
+          <input class="char-occupation-input" type="text" id="char-occupation" placeholder="Ocupação" />
+          <div class="char-fields">
+            <div class="char-field">
+              <label>Idade</label>
+              <input type="text" id="char-age" placeholder="—" />
+            </div>
+            <div class="char-field">
+              <label>Gênero</label>
+              <input type="text" id="char-gender" placeholder="—" />
+            </div>
+            <div class="char-field">
+              <label>Naturalidade</label>
+              <input type="text" id="char-birthplace" placeholder="—" />
+            </div>
+            <div class="char-field">
+              <label>Residência</label>
+              <input type="text" id="char-residence" placeholder="—" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ficha-section">
+        <div class="ficha-section-title">⊕ Ficha de Personagem (PDF)</div>
+        <div id="ficha-upload-area" class="ficha-upload-area" onclick="document.getElementById('ficha-input').click()">
+          <div class="icon">📄</div>
+          <div class="ficha-upload-text">Clique para enviar a ficha preenchida (.pdf)</div>
+        </div>
+        <div id="ficha-uploaded" class="ficha-uploaded hidden">
+          <span class="icon">📄</span>
+          <span class="ficha-uploaded-name" id="ficha-name">ficha.pdf</span>
+          <button class="btn-small primary-small" onclick="openFicha()">Abrir</button>
+          <button class="btn-small" onclick="document.getElementById('ficha-input').click()">Trocar</button>
+        </div>
+        <input type="file" id="ficha-input" accept=".pdf" class="hidden" onchange="handleFichaChange(event)" />
+      </div>
+
+      <div style="overflow:hidden">
+        <button class="btn-save" onclick="saveCharacter()">✦ Salvar Registro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PÁGINA: NOTAS -->
+  <div class="page" id="page-notes">
+    <h2 class="page-title">Diário de Investigação</h2>
+    <p class="page-subtitle">Registros das sessões — visíveis a todos os investigadores.</p>
+
+    <div id="notes-guardian-form" class="note-form hidden">
+      <div class="note-form-title">⊕ Nova Anotação (Guardião)</div>
+      <input type="text" id="note-session" placeholder="Sessão (ex: Sessão 3 — A Mansão)" />
+      <input type="text" id="note-title" placeholder="Título da nota" />
+      <textarea id="note-content" placeholder="Escreva a nota da sessão aqui..."></textarea>
+      <button class="btn-small primary-small" onclick="saveNote()">Publicar Nota</button>
+    </div>
+
+    <div id="notes-list" class="notes-list">
+      <div class="loading">Consultando os arquivos...</div>
+    </div>
+  </div>
+
+  <!-- PÁGINA: GUARDIÃO -->
+  <div class="page" id="page-guardian">
+    <h2 class="page-title">Painel do Guardião</h2>
+    <p class="page-subtitle">Visão geral de todos os investigadores registrados.</p>
+
+    <div id="guardian-grid" class="guardian-grid">
+      <div class="loading">Carregando investigadores...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VER PERSONAGEM (Guardião) -->
+<div class="modal-overlay" id="player-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 class="modal-title" id="modal-player-name">—</h3>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://xxybrqbiozggnbkbboft.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_NIa6sbIhDtai09QlIH3HHQ_n6BdnTXl';
+  const GUARDIAN_EMAIL = 'viniimansz@gmail.com'; // Troque pelo seu email
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let isGuardian = false;
+  let avatarFile = null;
+  let fichaFile = null;
+  let currentFichaUrl = null;
+
+  // ===== AUTH =====
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      enterApp();
+    }
+
+    sb.auth.onAuthStateChange((event, session) => {
+      if (session) { currentUser = session.user; enterApp(); }
+      else { currentUser = null; showLogin(); }
+    });
+  }
+
+  function enterApp() {
+    isGuardian = currentUser.email === GUARDIAN_EMAIL;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    if (isGuardian) {
+      document.getElementById('guardian-nav-btn').classList.remove('hidden');
+      document.getElementById('guardian-badge-char').classList.remove('hidden');
+      document.getElementById('notes-guardian-form').classList.remove('hidden');
+    }
+    loadCharacter();
+    loadNotes();
+  }
+
+  function showLogin() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) showError(error.message);
+  }
+
+  async function doRegister() {
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const pass = document.getElementById('reg-password').value;
+    const { error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { display_name: name } }
+    });
+    if (error) showError(error.message);
+    else showError('✦ Registro criado! Verifique seu email para confirmar.');
+  }
+
+  async function doLogout() {
+    await sb.auth.signOut();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function switchTab(tab) {
+    document.getElementById('tab-login').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('tab-register').classList.toggle('hidden', tab !== 'register');
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+    });
+  }
+
+  // ===== NAVEGAÇÃO =====
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.target.classList.add('active');
+    if (name === 'guardian') loadGuardianPanel();
+  }
+
+  // ===== PERSONAGEM =====
+  async function loadCharacter() {
+    const { data } = await sb.from('characters').select('*').eq('user_id', currentUser.id).single();
+    if (data) {
+      document.getElementById('char-name').value = data.name || '';
+      document.getElementById('char-occupation').value = data.occupation || '';
+      document.getElementById('char-age').value = data.age || '';
+      document.getElementById('char-gender').value = data.gender || '';
+      document.getElementById('char-birthplace').value = data.birthplace || '';
+      document.getElementById('char-residence').value = data.residence || '';
+
+      if (data.avatar_url) {
+        const img = document.createElement('img');
+        img.src = data.avatar_url;
+        img.className = 'char-avatar';
+        img.onclick = () => document.getElementById('avatar-input').click();
+        document.getElementById('avatar-container').innerHTML = '';
+        document.getElementById('avatar-container').appendChild(img);
+        const inp = document.createElement('input');
+        inp.type = 'file'; inp.id = 'avatar-input'; inp.accept = 'image/*';
+        inp.className = 'hidden'; inp.onchange = handleAvatarChange;
+        document.getElementById('avatar-container').appendChild(inp);
+      }
+
+      if (data.ficha_url) {
+        currentFichaUrl = data.ficha_url;
+        document.getElementById('ficha-upload-area').classList.add('hidden');
+        document.getElementById('ficha-uploaded').classList.remove('hidden');
+        document.getElementById('ficha-name').textContent = data.ficha_name || 'ficha.pdf';
+      }
+    }
+  }
+
+  function handleAvatarChange(event) {
+    const e = event || window.event;
+    const file = e.target.files[0];
+    if (!file) return;
+    avatarFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const container = document.getElementById('avatar-container');
+      container.innerHTML = `<img src="${ev.target.result}" class="char-avatar" onclick="document.getElementById('avatar-input').click()" /><input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="handleAvatarChange(event)" />`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleFichaChange(event) {
+    const e = event || window.event;
+    const file = e.target.files[0];
+    if (!file) return;
+    fichaFile = file;
+    document.getElementById('ficha-upload-area').classList.add('hidden');
+    document.getElementById('ficha-uploaded').classList.remove('hidden');
+    document.getElementById('ficha-name').textContent = file.name;
+  }
+
+  function openFicha() {
+    if (currentFichaUrl) window.open(currentFichaUrl, '_blank');
+  }
+
+  async function saveCharacter() {
+    const btn = document.querySelector('.btn-save');
+    btn.textContent = '...Salvando';
+    btn.disabled = true;
+
+    let avatarUrl = null;
+    let fichaUrl = null;
+    let fichaName = null;
+
+    if (avatarFile) {
+      const ext = avatarFile.name.split('.').pop();
+      const path = `${currentUser.id}/avatar.${ext}`;
+      await sb.storage.from('characters').upload(path, avatarFile, { upsert: true });
+      const { data: urlData } = sb.storage.from('characters').getPublicUrl(path);
+      avatarUrl = urlData.publicUrl + '?t=' + Date.now();
+    }
+
+    if (fichaFile) {
+      const path = `${currentUser.id}/ficha.pdf`;
+      await sb.storage.from('characters').upload(path, fichaFile, { upsert: true });
+      const { data: urlData } = sb.storage.from('characters').getPublicUrl(path);
+      fichaUrl = urlData.publicUrl;
+      fichaName = fichaFile.name;
+      currentFichaUrl = fichaUrl;
+    }
+
+    const payload = {
+      user_id: currentUser.id,
+      user_email: currentUser.email,
+      name: document.getElementById('char-name').value,
+      occupation: document.getElementById('char-occupation').value,
+      age: document.getElementById('char-age').value,
+      gender: document.getElementById('char-gender').value,
+      birthplace: document.getElementById('char-birthplace').value,
+      residence: document.getElementById('char-residence').value,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (avatarUrl) payload.avatar_url = avatarUrl;
+    if (fichaUrl) { payload.ficha_url = fichaUrl; payload.ficha_name = fichaName; }
+
+    const { error } = await sb.from('characters').upsert(payload, { onConflict: 'user_id' });
+
+    btn.textContent = '✦ Salvar Registro';
+    btn.disabled = false;
+
+    if (error) showToast('Erro: ' + error.message);
+    else showToast('✦ Registro salvo com sucesso!');
+  }
+
+  // ===== NOTAS =====
+  async function loadNotes() {
+    const { data, error } = await sb.from('notes').select('*').order('created_at', { ascending: false });
+    const list = document.getElementById('notes-list');
+
+    if (!data || data.length === 0) {
+      list.innerHTML = `<div class="loading" style="font-style:italic">Nenhuma nota registrada ainda.</div>`;
+      return;
+    }
+
+    list.innerHTML = data.map(n => `
+      <div class="note-card">
+        <div class="note-session">${n.session || 'Nota Geral'}</div>
+        <div class="note-title">${n.title}</div>
+        <div class="note-content">${n.content}</div>
+        <div class="note-date">${new Date(n.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })}</div>
+      </div>
+    `).join('');
+  }
+
+  async function saveNote() {
+    const session = document.getElementById('note-session').value;
+    const title = document.getElementById('note-title').value;
+    const content = document.getElementById('note-content').value;
+
+    if (!title || !content) { showToast('Preencha título e conteúdo.'); return; }
+
+    const { error } = await sb.from('notes').insert({ session, title, content, author_id: currentUser.id });
+
+    if (error) showToast('Erro: ' + error.message);
+    else {
+      showToast('✦ Nota publicada!');
+      document.getElementById('note-session').value = '';
+      document.getElementById('note-title').value = '';
+      document.getElementById('note-content').value = '';
+      loadNotes();
+    }
+  }
+
+  // ===== PAINEL GUARDIÃO =====
+  async function loadGuardianPanel() {
+    const { data } = await sb.from('characters').select('*');
+    const grid = document.getElementById('guardian-grid');
+
+    if (!data || data.length === 0) {
+      grid.innerHTML = `<div class="loading">Nenhum investigador registrado ainda.</div>`;
+      return;
+    }
+
+    grid.innerHTML = data.map(c => `
+      <div class="player-card" onclick="openPlayerModal(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+        ${c.avatar_url
+          ? `<img class="player-card-img" src="${c.avatar_url}" />`
+          : `<div class="player-card-img-placeholder">👤</div>`}
+        <div class="player-card-body">
+          <div class="player-card-name">${c.name || '(sem nome)'}</div>
+          <div class="player-card-occupation">${c.occupation || '—'}</div>
+          <div class="player-card-actions">
+            ${c.ficha_url ? `<button class="btn-small primary-small" onclick="event.stopPropagation(); window.open('${c.ficha_url}', '_blank')">Ver Ficha</button>` : '<span style="font-size:0.7rem; font-family: Cinzel; color: #888">Sem ficha</span>'}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openPlayerModal(char) {
+    document.getElementById('modal-player-name').textContent = char.name || 'Investigador';
+    document.getElementById('modal-content').innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-family: 'Crimson Text', serif; font-size:1rem; color: var(--ink-faded);">
+        <tr><td style="padding:0.3rem 0; font-family:Cinzel; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase; width:40%">Email</td><td>${char.user_email || '—'}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:Cinzel; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Ocupação</td><td>${char.occupation || '—'}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:Cinzel; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Idade</td><td>${char.age || '—'}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:Cinzel; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Gênero</td><td>${char.gender || '—'}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:Cinzel; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Naturalidade</td><td>${char.birthplace || '—'}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:Cinzel; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Residência</td><td>${char.residence || '—'}</td></tr>
+      </table>
+      ${char.ficha_url ? `<div style="margin-top:1.5rem"><button class="btn-small primary-small" onclick="window.open('${char.ficha_url}', '_blank')">📄 Abrir Ficha PDF</button></div>` : ''}
+    `;
+    document.getElementById('player-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('player-modal').classList.remove('open');
+  }
+
+  // ===== UTILS =====
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  init();
+</script>
+</body>
+</html>
