@@ -391,12 +391,15 @@
     .sw-intro { font-family: 'EB Garamond', serif; font-size: 1rem; color: var(--ink-faded); line-height: 1.6; margin-bottom: 1.2rem; }
 
     .sw-roll-controls { display: flex; gap: 0.6rem; margin-bottom: 1rem; }
-    .sw-rolled-pool { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; min-height: 20px; }
+    .sw-rolled-pool { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; min-height: 20px; align-items: center; }
     .sw-rolled-chip {
       background: var(--blood-dark); color: var(--parchment); font-family: 'Cormorant', serif; font-size: 0.85rem;
-      padding: 0.4rem 0.8rem; cursor: grab; border: 1px solid var(--gold); user-select: none;
+      padding: 0.4rem 0.8rem; cursor: pointer; border: 1px solid var(--gold); user-select: none; transition: all 0.15s;
     }
+    .sw-rolled-chip:active { cursor: grabbing; }
     .sw-rolled-chip.used { opacity: 0.3; cursor: not-allowed; }
+    .sw-rolled-chip.selected { background: var(--gold); border-color: var(--gold-light); box-shadow: 0 0 0 2px rgba(58,97,87,0.4); transform: scale(1.08); }
+    .sw-rolled-hint { width: 100%; font-family: 'EB Garamond', serif; font-style: italic; font-size: 0.8rem; color: var(--ink-light); margin-top: 0.3rem; }
 
     .sw-attr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
     .sw-attr-card {
@@ -626,6 +629,73 @@
       .btn-save { float: none; width: 100%; margin-top: 1rem; }
       .login-card { padding: 2rem 1.5rem; }
       .char-editor-top { flex-wrap: wrap; gap: 0.5rem; }
+
+      /* Campanhas e Jogadores */
+      .campaigns-grid { grid-template-columns: 1fr; }
+      .player-tile, .campaign-tile { font-size: 0.95rem; }
+      .campaign-detail-banner { height: 140px; }
+      .campaign-roster { grid-template-columns: repeat(2, 1fr); }
+      .roster-card-body { padding: 0.5rem; }
+
+      /* Perfil */
+      .profile-header-row { flex-direction: column; align-items: center; text-align: center; gap: 0.6rem; }
+      .profile-avatar-big { width: 80px; height: 80px; }
+      .profile-namebox { text-align: center; }
+      #profile-edit-toggle-btn { align-self: center !important; }
+      .profile-char-grid { grid-template-columns: repeat(2, 1fr); }
+      .profile-cover-wrap { margin-bottom: 0; }
+
+      /* Painel do Guardião */
+      .new-campaign-form { padding: 1rem; }
+      .guardian-section-title { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+
+      /* Wizard de Ficha CoC */
+      .sheet-wizard-overlay { padding: 0.8rem 0.4rem; }
+      .sheet-wizard-box { padding: 1rem; }
+      .sheet-wizard-steps { gap: 0.3rem; font-size: 0.7rem; }
+      .sw-step { font-size: 0.68rem; padding: 0.2rem 0.3rem; }
+      .sw-step-sep { display: none; }
+      .sw-attr-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+      .sw-derived-preview { grid-template-columns: repeat(3, 1fr); }
+      .sw-skills-grid { grid-template-columns: 1fr; max-height: 220px; }
+      .sw-weapon-row { grid-template-columns: 1fr 1fr; }
+      .sw-points-bar { flex-direction: column; gap: 0.5rem; }
+      .occupations-list { max-height: 50vh; }
+      .sw-ante-grid { grid-template-columns: 1fr; }
+
+      /* Visualização da Ficha (estilo PDF) */
+      .sheet-viewer-overlay { padding: 0.8rem 0.3rem; }
+      .sheet-viewer-box { padding: 1rem 0.9rem; }
+      .sheet-viewer-topbar { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+      .sheet-viewer-tabs { justify-content: center; }
+      .sv-header-row { flex-direction: column; gap: 0.6rem; }
+      .sv-attrs-row { grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+      .sv-attr-box { padding: 0.4rem 0.1rem; }
+      .sv-vitals-row { flex-direction: column; }
+      .sv-vital-box, .sv-vital-box.small { min-width: 100%; flex: 1 1 100%; }
+      .sv-derived-row { grid-template-columns: repeat(2, 1fr); }
+      .sv-skills-grid { grid-template-columns: 1fr; }
+      .sv-skill-cell { flex-wrap: wrap; }
+      .sv-weapon-line { font-size: 0.75rem; }
+      .sv-ante-display-grid { grid-template-columns: 1fr; }
+      .sv-money-row { grid-template-columns: 1fr; }
+      .sv-companions-grid { grid-template-columns: repeat(2, 1fr); }
+
+      /* Modais */
+      .modal { padding: 1.2rem; max-width: 95vw; }
+      .modal-actions { flex-direction: column-reverse; gap: 0.5rem; }
+      .modal-actions button { width: 100%; }
+
+      /* Toasts */
+      .roll-toast { min-width: 180px; padding: 0.8rem 1.2rem; }
+      .toast { left: 1rem; right: 1rem; bottom: 1rem; max-width: none; }
+    }
+
+    @media (max-width: 420px) {
+      .sw-attr-grid { grid-template-columns: 1fr 1fr; }
+      .sv-attrs-row { grid-template-columns: repeat(2, 1fr); }
+      .profile-char-grid, .campaign-roster, .sv-companions-grid { grid-template-columns: 1fr; }
+      .sheet-wizard-steps { font-size: 0.62rem; }
     }
   </style>
 </head>
@@ -1795,20 +1865,29 @@
     renderAttributeStep();
   }
 
+  let swSelectedChipId = null;
+
   function renderAttributeStep() {
     const pool = document.getElementById('sw-rolled-pool');
     pool.innerHTML = swState.rolledPool.map(chip => `
-      <div class="sw-rolled-chip ${chip.used ? 'used' : ''}" draggable="${!chip.used}" data-chip-id="${chip.id}"
-        ondragstart="onChipDragStart(event, '${chip.id}')">
+      <div class="sw-rolled-chip ${chip.used ? 'used' : ''} ${chip.id === swSelectedChipId ? 'selected' : ''}" draggable="${!chip.used}" data-chip-id="${chip.id}"
+        ondragstart="onChipDragStart(event, '${chip.id}')" onclick="onChipClick('${chip.id}')">
         ${chip.value} <span style="opacity:0.7; font-size:0.7rem;">(${chip.formula})</span>
       </div>
-    `).join('') || '<span style="font-family:\'IM Fell English\'; font-style:italic; color:var(--ink-light); font-size:0.85rem;">Nenhuma rolagem pendente. Clique em "Rolar Atributos" ou digite valores manualmente abaixo.</span>';
+    `).join('') || '<span style="font-family:\'EB Garamond\'; font-style:italic; color:var(--ink-light); font-size:0.85rem;">Nenhuma rolagem pendente. Clique em "Rolar Atributos" ou digite valores manualmente abaixo.</span>';
+
+    if (swState.rolledPool.length) {
+      const hint = document.createElement('div');
+      hint.className = 'sw-rolled-hint';
+      hint.textContent = swSelectedChipId ? 'Agora toque no atributo onde quer colocar esse valor.' : 'Toque num valor para selecioná-lo, depois toque no atributo desejado (ou arraste no computador).';
+      pool.appendChild(hint);
+    }
 
     const grid = document.getElementById('sw-attr-grid');
     grid.innerHTML = Object.keys(ATTR_LABELS).map(key => `
-      <div class="sw-attr-card" id="sw-attr-card-${key}" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="onAttrDrop(event, '${key}')">
+      <div class="sw-attr-card" id="sw-attr-card-${key}" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="onAttrDrop(event, '${key}')" onclick="onAttrCardClick('${key}')">
         <div class="sw-attr-label">${ATTR_LABELS[key]}</div>
-        <div class="sw-attr-value"><input type="number" min="0" max="99" value="${swState.attrs[key] ?? ''}" oninput="setAttrManual('${key}', this.value)" /></div>
+        <div class="sw-attr-value"><input type="number" min="0" max="99" value="${swState.attrs[key] ?? ''}" oninput="setAttrManual('${key}', this.value)" onclick="event.stopPropagation()" /></div>
         <div class="sw-attr-formula">${ATTR_ROLL_TYPE[key]}×5</div>
       </div>
     `).join('');
@@ -1817,6 +1896,23 @@
   }
 
   function onChipDragStart(ev, chipId) { ev.dataTransfer.setData('text/plain', chipId); }
+
+  function onChipClick(chipId) {
+    const chip = swState.rolledPool.find(c => c.id === chipId);
+    if (!chip || chip.used) return;
+    swSelectedChipId = (swSelectedChipId === chipId) ? null : chipId;
+    renderAttributeStep();
+  }
+
+  function onAttrCardClick(attrKey) {
+    if (!swSelectedChipId) return;
+    const chip = swState.rolledPool.find(c => c.id === swSelectedChipId);
+    if (!chip || chip.used) { swSelectedChipId = null; return; }
+    chip.used = true;
+    swState.attrs[attrKey] = chip.value;
+    swSelectedChipId = null;
+    renderAttributeStep();
+  }
 
   function onAttrDrop(ev, attrKey) {
     ev.preventDefault();
