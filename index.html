@@ -30,6 +30,7 @@
 
     body {
       background-color: #070b0a;
+      overflow-x: hidden;
       background-image:
         radial-gradient(ellipse at 25% 15%, rgba(58, 97, 87, 0.22) 0%, transparent 55%),
         radial-gradient(ellipse at 80% 60%, rgba(15, 29, 26, 0.5) 0%, transparent 65%),
@@ -622,13 +623,16 @@
       .char-info { width: 100%; }
       .char-name-input { text-align: center; }
       .char-occupation-input { text-align: center; }
-      .char-fields { grid-template-columns: 1fr 1fr; }
-      .char-field input { text-align: center; }
+      .char-fields { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+      .char-field { min-width: 0; }
+      .char-field input { text-align: center; width: 100%; min-width: 0; box-sizing: border-box; }
       .guardian-grid { grid-template-columns: 1fr 1fr; }
       .char-list-grid { grid-template-columns: 1fr 1fr; }
       .btn-save { float: none; width: 100%; margin-top: 1rem; }
       .login-card { padding: 2rem 1.5rem; }
       .char-editor-top { flex-wrap: wrap; gap: 0.5rem; }
+      .character-card { padding: 1.2rem 1rem 1.2rem 1.6rem; }
+      .character-card::before { left: 4px; right: 4px; top: 4px; bottom: 4px; }
 
       /* Campanhas e Jogadores */
       .campaigns-grid { grid-template-columns: 1fr; }
