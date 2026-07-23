@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>O Arquivo de Londres — Registros Restritos</title>
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700&family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen">
+  <div class="login-stage">
+    <aside class="login-welcome">
+      <div class="login-welcome-seal">✦</div>
+      <p class="login-welcome-eyebrow">Bem-vindo, forasteiro</p>
+      <h2 class="login-welcome-title">O que se guarda aqui não deveria ser lido em voz alta.</h2>
+      <p class="login-welcome-lede">
+        O Arquivo de Londres reúne relatórios de investigadores que ousaram olhar
+        para o outro lado. Papéis rasgados, fotografias tremidas, cartas escritas
+        com pressa. Ao entrar, você concorda em ler, catalogar — e talvez ser lido de volta.
+      </p>
+      <ul class="login-welcome-list">
+        <li><span>I.</span> Registre-se como investigador do Arquivo</li>
+        <li><span>II.</span> Fabrique sua ficha em cinco atos guiados</li>
+        <li><span>III.</span> Some-se a uma campanha e comece a arquivar</li>
+      </ul>
+      <p class="login-welcome-quote">"Some records were never meant to be opened."</p>
+    </aside>
+
+    <div class="login-card">
+      <div class="login-ornament"></div>
+      <p class="login-eyebrow">Est. 1887</p>
+      <h1 class="login-title">O Arquivo de Londres</h1>
+      <p class="login-subtitle">Registros Restritos — Somente Investigadores Autorizados</p>
+      <p class="login-motto">"Some records were never meant to be opened."</p>
+      <div class="divider"></div>
+
+      <div class="tab-group">
+        <button class="tab-btn active" onclick="switchTab('login')">Entrar</button>
+        <button class="tab-btn" onclick="switchTab('register')">Novo Registro</button>
+      </div>
+
+      <div id="tab-login">
+        <div class="form-group">
+          <label class="form-label">Endereço de Correio</label>
+          <input class="form-input" type="email" id="login-email" placeholder="seu@email.com" autocomplete="email" oninput="clearAuthError()" onkeydown="if(event.key==='Enter')doLogin()" />
+          <p class="form-hint">O email registrado no seu dossiê.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha Secreta</label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" oninput="clearAuthError()" onkeydown="if(event.key==='Enter')doLogin()" />
+            <button type="button" class="input-eye" onclick="togglePwd('login-password', this)" aria-label="Mostrar senha">👁</button>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="doLogin()">Adentrar o Arquivo</button>
+        <p class="login-help">Primeira vez aqui? <a href="#" onclick="switchTab('register');return false;">Solicite um novo registro</a>.</p>
+      </div>
+
+      <div id="tab-register" class="hidden">
+        <div class="form-group">
+          <label class="form-label">Seu Nome</label>
+          <input class="form-input" type="text" id="reg-name" placeholder="Nome do investigador" autocomplete="name" oninput="clearAuthError()" />
+          <p class="form-hint">Como você deseja ser chamado nos arquivos.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Endereço de Correio</label>
+          <input class="form-input" type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email" oninput="clearAuthError()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha Secreta</label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="reg-password" placeholder="mín. 6 caracteres" autocomplete="new-password" oninput="updatePwdStrength();clearAuthError()" />
+            <button type="button" class="input-eye" onclick="togglePwd('reg-password', this)" aria-label="Mostrar senha">👁</button>
+          </div>
+          <div class="pwd-meter" id="pwd-meter" aria-hidden="true"><span></span></div>
+          <p class="form-hint" id="pwd-hint">Escolha algo difícil de deduzir — nomes, datas e palavras óbvias caem cedo.</p>
+        </div>
+        <button class="btn-primary" onclick="doRegister()">Solicitar Registro</button>
+        <p class="login-help">Já é do Arquivo? <a href="#" onclick="switchTab('login');return false;">Entre por aqui</a>.</p>
+      </div>
+
+      <div class="error-msg" id="auth-error" role="alert"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TELA DE SETUP OBRIGATÓRIO DE PERFIL -->
+<div id="setup-screen">
+  <div class="login-card" style="max-width: 480px;">
+    <div class="login-ornament"></div>
+    <h1 class="login-title">Identifique-se, Investigador</h1>
+    <p class="login-subtitle">Antes de adentrar o arquivo, registre quem você é.</p>
+    <div class="divider"></div>
+
+    <div class="form-group">
+      <label class="form-label">Foto de Perfil (opcional)</label>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <img id="setup-avatar-preview" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid var(--bronze-light); background:var(--surface-3);" src="" />
+        <button class="btn-small" onclick="document.getElementById('setup-avatar-input').click()">Escolher Foto</button>
+        <input type="file" id="setup-avatar-input" accept="image/*" class="hidden" onchange="handleSetupAvatarChange(event)" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Nome *</label>
+      <input class="form-input" type="text" id="setup-display-name" placeholder="Seu nome" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nickname *</label>
+      <input class="form-input" type="text" id="setup-nickname" placeholder="apelido" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bio (opcional)</label>
+      <textarea class="form-input" id="setup-bio" placeholder="Fale um pouco sobre você..." style="min-height:70px; resize:vertical;"></textarea>
+    </div>
+
+    <button class="btn-primary" onclick="completeSetup()">Entrar no Arquivo</button>
+    <div class="error-msg" id="setup-error"></div>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="app">
+  <nav class="navbar">
+    <div class="navbar-brand">O Arquivo de Londres <span>Est. 1887 · Restricted Access</span></div>
+    <ul class="navbar-nav">
+      <li>
+        <button class="nav-profile-btn" id="nav-profile" onclick="showPage('profile', this)">
+          <img id="nav-profile-avatar" class="nav-profile-avatar" src="" />
+          <span id="nav-profile-label">Perfil</span>
+        </button>
+      </li>
+      <li><button class="nav-btn nav-primary active" id="nav-character" onclick="showPage('character', this)" data-tour="nav-character"><span class="nav-primary-dot">◆</span> Investigadores</button></li>
+      <li><button class="nav-btn" id="nav-notes" onclick="showPage('notes', this)" data-tour="nav-notes">Arquivos Investigativos</button></li>
+      <li><button class="nav-btn" id="nav-players" onclick="showPage('players', this)" data-tour="nav-players">Membros</button></li>
+      <li><button class="nav-btn nav-help" onclick="startTutorial()" title="Reabrir o guia inicial">? Guia</button></li>
+      <li id="guardian-nav-btn" class="hidden">
+        <button class="nav-btn guardian" id="nav-guardian" onclick="showPage('guardian', this)">Arquivo do Guardião</button>
+      </li>
+      <li><button class="nav-btn nav-logout" onclick="doLogout()">Sair</button></li>
+    </ul>
+    <button class="hamburger" onclick="toggleMobileMenu()">☰</button>
+  </nav>
+  <div class="mobile-menu" id="mobile-menu">
+    <button class="nav-profile-btn" id="mnav-profile" onclick="showPage('profile', this, true)">
+      <img id="mnav-profile-avatar" class="nav-profile-avatar" src="" />
+      <span>Perfil</span>
+    </button>
+    <button class="nav-btn active" id="mnav-character" onclick="showPage('character', this, true)">Investigadores</button>
+    <button class="nav-btn" id="mnav-notes" onclick="showPage('notes', this, true)">Arquivos Investigativos</button>
+    <button class="nav-btn" id="mnav-players" onclick="showPage('players', this, true)">Membros</button>
+    <button class="nav-btn guardian hidden" id="mnav-guardian" onclick="showPage('guardian', this, true)">Arquivo do Guardião</button>
+    <button class="nav-btn nav-logout" onclick="doLogout()">Sair</button>
+  </div>
+
+  <!-- PÁGINA: PERFIL -->
+  <div class="page" id="page-profile">
+    <div class="profile-cover-wrap">
+      <div id="profile-cover-container">
+        <div class="profile-cover-placeholder">Sem capa definida</div>
+      </div>
+      <button class="profile-cover-edit-btn hidden" id="profile-cover-edit-btn" onclick="document.getElementById('profile-cover-input').click()">🖼 Editar Capa</button>
+      <input type="file" id="profile-cover-input" accept="image/*" class="hidden" onchange="handleCoverChange(event)" />
+    </div>
+
+    <div class="profile-header-row">
+      <div class="profile-avatar-wrap">
+        <img id="profile-avatar-big" class="profile-avatar-big" src="" />
+        <button class="profile-avatar-edit-btn hidden" id="profile-avatar-edit-btn" onclick="document.getElementById('profile-avatar-input').click()">✎</button>
+        <input type="file" id="profile-avatar-input" accept="image/*" class="hidden" onchange="handleProfileAvatarChange(event)" />
+      </div>
+      <div class="profile-namebox" style="flex:1;">
+        <div class="profile-display-name" id="profile-display-name-view">—</div>
+        <div class="profile-nickname" id="profile-nickname-view">—</div>
+      </div>
+      <button class="btn-small primary-small" id="profile-edit-toggle-btn" onclick="toggleProfileEditMode()" style="align-self:flex-end;">✎ Editar Perfil</button>
+    </div>
+
+    <p class="profile-bio" id="profile-bio-view"></p>
+
+    <div class="profile-edit-card hidden" id="profile-edit-card">
+      <div class="ficha-section-title">⊕ Editar Perfil</div>
+      <div class="form-group">
+        <label class="form-label">Nome</label>
+        <input class="form-input" type="text" id="profile-display-name" placeholder="Seu nome" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nickname</label>
+        <input class="form-input" type="text" id="profile-nickname" placeholder="@apelido" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea class="form-input" id="profile-bio" placeholder="Fale um pouco sobre você..." style="min-height:80px; resize:vertical;"></textarea>
+      </div>
+      <button class="btn-small primary-small" onclick="saveProfile()">Salvar Perfil</button>
+      <button class="btn-small" onclick="toggleProfileEditMode()">Cancelar</button>
+    </div>
+
+    <div class="profile-section-title">Seus Investigadores</div>
+    <div class="profile-char-grid" id="profile-char-grid">
+      <div class="loading" style="grid-column: 1/-1">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- PÁGINA: PERSONAGENS (lista) -->
+  <div class="page active" id="page-character">
+    <h2 class="page-title">Seus Investigadores <span id="guardian-badge-char" class="guardian-badge hidden" title="Guardião">⛧</span></h2>
+    <p class="page-subtitle">Gerencie seus registros e vincule-os a um arquivo investigativo.</p>
+
+    <div id="char-list-view">
+      <p class="char-limit-note" id="char-count-note">Carregando...</p>
+      <div id="char-list-grid" class="char-list-grid">
+        <div class="loading">Consultando os arquivos...</div>
+      </div>
+    </div>
+
+    <!-- EDITOR -->
+    <div class="character-card" id="char-editor">
+      <div class="char-editor-top">
+        <button class="btn-back" onclick="closeCharEditor()">← Voltar à lista</button>
+        <button class="btn-delete hidden" id="btn-delete-char" onclick="confirmDeleteCharacter()">🗑 Excluir Personagem</button>
+      </div>
+
+      <div class="char-header">
+        <div id="avatar-container">
+          <div class="char-avatar-placeholder" onclick="document.getElementById('avatar-input').click()">
+            <span class="icon">🖼</span>
+            <span>Clique para<br>adicionar foto</span>
+          </div>
+          <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="handleAvatarChange(event)" />
+        </div>
+        <div class="char-info">
+          <input class="char-name-input" type="text" id="char-name" placeholder="Nome do Investigador" />
+          <input class="char-occupation-input" type="text" id="char-occupation" placeholder="Ocupação" />
+          <div class="char-fields">
+            <div class="char-field"><label>Idade</label><input type="text" id="char-age" placeholder="—" /></div>
+            <div class="char-field"><label>Gênero</label><input type="text" id="char-gender" placeholder="—" /></div>
+            <div class="char-field"><label>Naturalidade</label><input type="text" id="char-birthplace" placeholder="—" /></div>
+            <div class="char-field"><label>Residência</label><input type="text" id="char-residence" placeholder="—" /></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="campaign-select-wrap">
+        <div class="ficha-section-title">⊕ Campanha</div>
+        <select id="char-campaign" class="form-input">
+          <option value="">— Sem campanha —</option>
+        </select>
+      </div>
+
+      <div class="ficha-section">
+        <div class="ficha-section-title">⊕ Ficha Digital (Recomendado)</div>
+        <div id="coc-sheet-status-area">
+          <button class="btn-small primary-small" onclick="openSheetWizard()" id="btn-open-sheet">📜 Criar Ficha Digital</button>
+        </div>
+      </div>
+
+      <div class="ficha-section">
+        <div class="ficha-section-title">⊕ Ou: Ficha em PDF (alternativa)</div>
+        <div id="ficha-upload-area" class="ficha-upload-area" onclick="document.getElementById('ficha-input').click()">
+          <div class="icon">📄</div>
+          <div class="ficha-upload-text">Clique para enviar a ficha preenchida (.pdf)</div>
+        </div>
+        <div id="ficha-uploaded" class="ficha-uploaded hidden">
+          <span class="icon">📄</span>
+          <span class="ficha-uploaded-name" id="ficha-name">ficha.pdf</span>
+          <button class="btn-small primary-small" onclick="openFicha()">Abrir</button>
+          <button class="btn-small" onclick="document.getElementById('ficha-input').click()">Trocar</button>
+        </div>
+        <input type="file" id="ficha-input" accept=".pdf" class="hidden" onchange="handleFichaChange(event)" />
+      </div>
+
+      <div style="overflow:hidden">
+        <button class="btn-save" onclick="saveCharacter()">✦ Salvar Personagem</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PÁGINA: CAMPANHAS (lista) -->
+  <div class="page" id="page-notes">
+    <div id="campaigns-list-view">
+      <h2 class="page-title">Arquivos Investigativos</h2>
+      <p class="page-subtitle">Selecione um arquivo para ver os investigadores designados e as anotações de campo.</p>
+
+      <div id="campaigns-grid" class="campaigns-grid">
+        <div class="loading">Carregando campanhas...</div>
+      </div>
+    </div>
+
+    <!-- DETALHE DA CAMPANHA -->
+    <div id="campaign-detail-view" class="hidden">
+      <button class="btn-back" onclick="closeCampaignDetail()" style="margin-bottom:1rem;">← Voltar aos arquivos</button>
+
+      <div id="campaign-detail-banner" class="campaign-detail-banner"></div>
+
+      <h3 class="campaign-detail-title" id="campaign-detail-title">—</h3>
+      <p class="campaign-detail-desc" id="campaign-detail-desc"></p>
+
+      <div class="profile-section-title" style="margin-left:0; padding-left:0;">Investigadores</div>
+      <div id="campaign-roster" class="campaign-roster"></div>
+
+      <div class="profile-section-title" style="margin-left:0; padding-left:0; margin-top:2rem;">Anotações de Campo</div>
+
+      <div id="notes-guardian-form" class="note-form hidden">
+        <div class="note-form-title">⊕ Nova Anotação (Guardião)</div>
+        <input type="text" id="note-session" placeholder="Sessão (ex: Sessão 3 — A Mansão)" />
+        <input type="text" id="note-title" placeholder="Título da nota" />
+        <textarea id="note-content" placeholder="Escreva a nota da sessão aqui..."></textarea>
+        <button class="btn-small primary-small" onclick="saveNote()">Publicar Nota</button>
+      </div>
+
+      <div id="notes-list" class="notes-list">
+        <div class="loading">Nenhuma nota ainda.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PÁGINA: JOGADORES -->
+  <div class="page" id="page-players">
+    <h2 class="page-title">Membros do Arquivo</h2>
+    <p class="page-subtitle">Todos os investigadores que já se registraram nesta sociedade.</p>
+
+    <div id="players-grid" class="campaigns-grid">
+      <div class="loading">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- PÁGINA: GUARDIÃO -->
+  <div class="page" id="page-guardian">
+    <h2 class="page-title">Arquivo do Guardião</h2>
+    <p class="page-subtitle">Administre os arquivos investigativos e supervisione os investigadores.</p>
+
+    <div class="new-campaign-form">
+      <div class="note-form-title">⊕ Novo Arquivo Investigativo</div>
+      <input type="text" id="new-campaign-name" placeholder="Nome do arquivo" />
+      <textarea id="new-campaign-desc" placeholder="Descrição (opcional)" style="min-height:60px"></textarea>
+      <button class="btn-small primary-small" onclick="createCampaign()">Abrir Arquivo</button>
+    </div>
+
+    <div id="guardian-campaigns"></div>
+  </div>
+
+  <footer class="archive-footer">
+    <div class="archive-footer-mark"></div>
+    <p class="archive-footer-name">O Arquivo de Londres</p>
+    <p class="archive-footer-meta">Est. 1887 — Restricted Access</p>
+  </footer>
+</div>
+
+<!-- MODAL: VER PERSONAGEM (Guardião) -->
+<div class="modal-overlay" id="player-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 class="modal-title" id="modal-player-name">—</h3>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR EXCLUSÃO -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal" style="max-width:420px">
+    <button class="modal-close" onclick="closeConfirmModal()">✕</button>
+    <h3 class="modal-title">Excluir Personagem?</h3>
+    <p class="modal-confirm-text">Essa ação não pode ser desfeita. O personagem e a ficha enviada serão removidos permanentemente.</p>
+    <div class="modal-actions">
+      <button class="btn-small" onclick="closeConfirmModal()">Cancelar</button>
+      <button class="btn-small primary-small" style="background:rgba(94,36,25,0.35); border-color:var(--blood-light)" onclick="deleteCharacter()">Sim, excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR CAMPANHA -->
+<div class="modal-overlay" id="edit-campaign-modal">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-close" onclick="closeEditCampaignModal()">✕</button>
+    <h3 class="modal-title">Editar Arquivo Investigativo</h3>
+
+    <div class="form-group">
+      <label class="form-label">Capa da Campanha</label>
+      <div id="edit-campaign-cover-preview" style="width:100%; height:120px; background:linear-gradient(135deg, #2e2118 0%, #1c1815 100%); margin-bottom:0.6rem; cursor:pointer; background-size:cover; background-position:center;" onclick="document.getElementById('edit-campaign-cover-input').click()"></div>
+      <button class="btn-small" onclick="document.getElementById('edit-campaign-cover-input').click()">🖼 Trocar Capa</button>
+      <input type="file" id="edit-campaign-cover-input" accept="image/*" class="hidden" onchange="handleEditCampaignCoverChange(event)" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Nome</label>
+      <input class="form-input" type="text" id="edit-campaign-name" placeholder="Nome do arquivo" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <textarea class="form-input" id="edit-campaign-desc" placeholder="Descrição da campanha" style="min-height:80px; resize:vertical;"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-small" onclick="closeEditCampaignModal()">Cancelar</button>
+      <button class="btn-small primary-small" onclick="saveEditCampaign()">✦ Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- WIZARD DE FICHA DIGITAL COC -->
+<div class="sheet-wizard-overlay" id="sheet-wizard-overlay">
+  <div class="sheet-wizard-box">
+    <div class="sheet-wizard-header sheet-wizard-header-v2">
+      <div class="swh-top">
+        <button class="btn-back" onclick="closeSheetWizard()">← Fechar</button>
+        <div class="swh-title">
+          <p class="swh-eyebrow" id="sw-eyebrow">Etapa 1 de 5</p>
+          <h2 class="swh-heading" id="sw-heading">Atributos</h2>
+          <p class="swh-sub" id="sw-sub">Role os dados ou preencha os oito atributos base do seu investigador.</p>
+        </div>
+        <div class="swh-count" id="sw-count">1<span>/5</span></div>
+      </div>
+      <div class="swh-progress"><div class="swh-progress-bar" id="sw-progress-bar" style="width:20%"></div></div>
+      <div class="sheet-wizard-steps sw-steps-v2">
+        <span class="sw-step active" id="sw-tab-1" onclick="goToStep(1)"><i>1</i>Atributos</span>
+        <span class="sw-step" id="sw-tab-2" onclick="goToStep(2)"><i>2</i>Ocupação</span>
+        <span class="sw-step" id="sw-tab-3" onclick="goToStep(3)"><i>3</i>Perícias</span>
+        <span class="sw-step" id="sw-tab-4" onclick="goToStep(4)"><i>4</i>Combate</span>
+        <span class="sw-step" id="sw-tab-5" onclick="goToStep(5)"><i>5</i>Antecedentes</span>
+      </div>
+    </div>
+
+
+    <!-- ETAPA 1: ATRIBUTOS -->
+    <div class="sw-panel active" id="sw-panel-1">
+      <p class="sw-intro">Defina seus 8 atributos. Você pode rolar os dados pelo site (3d6×5, ou 2d6+6×5 para TAM/INT/EDU) e decidir onde colocar cada resultado, ou digitar valores que já rolou por fora.</p>
+
+      <div class="sw-roll-controls">
+        <button class="btn-small primary-small" onclick="rollAllAttributes()">🎲 Rolar Atributos</button>
+        <button class="btn-small" onclick="clearRolledPool()">Limpar Rolagens</button>
+      </div>
+
+      <div id="sw-rolled-pool" class="sw-rolled-pool"></div>
+
+      <div class="sw-attr-grid" id="sw-attr-grid"></div>
+
+      <div class="sw-derived-preview" id="sw-derived-preview"></div>
+
+      <button class="btn-save" onclick="goToStep(2)" style="float:right; margin-top:1.5rem;">Continuar →</button>
+    </div>
+
+    <!-- ETAPA 2: OCUPAÇÃO -->
+    <div class="sw-panel" id="sw-panel-2">
+      <p class="sw-intro">Escolha a ocupação do seu investigador. Ela define quais perícias você poderá treinar e quantos pontos terá para isso.</p>
+      <input type="text" id="occ-search" class="form-input" placeholder="🔎 Buscar ocupação..." oninput="renderOccupationsList()" style="margin-bottom:1.2rem;" />
+      <div id="occupations-list" class="occupations-list"></div>
+      <div style="overflow:hidden; margin-top:1rem;">
+        <button class="btn-back" onclick="goToStep(1)">← Voltar</button>
+      </div>
+    </div>
+
+    <!-- ETAPA 3: PERÍCIAS -->
+    <div class="sw-panel" id="sw-panel-3">
+      <p class="sw-intro">Distribua seus pontos de perícia. Pontos de <strong>Ocupação</strong> só podem ir nas 8 perícias sugeridas; pontos <strong>Pessoais</strong> (INT×2) podem ir em qualquer perícia.</p>
+
+      <div class="sw-points-bar">
+        <div class="sw-points-pill" id="sw-occ-points-pill">Ocupação: <span id="sw-occ-remaining">0</span> / <span id="sw-occ-total">0</span></div>
+        <div class="sw-points-pill" id="sw-pers-points-pill">Pessoais: <span id="sw-pers-remaining">0</span> / <span id="sw-pers-total">0</span></div>
+      </div>
+
+      <div class="sw-skills-section-title">Perícias da Ocupação</div>
+      <div id="sw-occupation-skills" class="sw-skills-grid"></div>
+
+      <div class="sw-skills-section-title">Demais Perícias</div>
+      <input type="text" id="skill-search" class="form-input" placeholder="🔎 Buscar perícia..." oninput="renderAllSkills()" style="margin-bottom:0.8rem;" />
+      <div id="sw-all-skills" class="sw-skills-grid"></div>
+
+      <div class="sw-skills-section-title">Perícias Personalizadas <span style="font-family:'Cormorant Garamond', serif; font-style:italic; font-size:0.75rem; text-transform:none; color:var(--ink-light);">(idiomas, ciências, ofícios — use pontos pessoais)</span></div>
+      <div id="sw-custom-skills" class="sw-custom-skills-list"></div>
+      <button class="btn-small" onclick="addCustomSkillRow()">+ Adicionar Perícia Personalizada</button>
+
+      <div style="overflow:hidden; margin-top:1.2rem;">
+        <button class="btn-back" onclick="goToStep(2)">← Voltar</button>
+        <button class="btn-save" onclick="goToStep(4)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- ETAPA 4: COMBATE -->
+    <div class="sw-panel" id="sw-panel-4">
+      <p class="sw-intro">Suas armas e equipamento de combate. Os valores de regular/difícil/extremo se calculam a partir da perícia de ataque correspondente.</p>
+
+      <div id="sw-weapons-list" class="sw-weapons-list"></div>
+      <button class="btn-small" onclick="addWeaponRow()">+ Adicionar Arma</button>
+
+      <div style="overflow:hidden; margin-top:1.2rem;">
+        <button class="btn-back" onclick="goToStep(3)">← Voltar</button>
+        <button class="btn-save" onclick="goToStep(5)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- ETAPA 5: ANTECEDENTES -->
+    <div class="sw-panel" id="sw-panel-5">
+      <p class="sw-intro">Os toques finais que dão alma ao seu investigador.</p>
+
+      <div class="sw-ante-grid">
+        <div class="form-group"><label class="form-label">Descrição Pessoal</label><textarea id="ante-descricao" class="form-input"></textarea></div>
+        <div class="form-group"><label class="form-label">Características</label><textarea id="ante-caracteristicas" class="form-input"></textarea></div>
+        <div class="form-group"><label class="form-label">Ideologias / Crenças</label><textarea id="ante-ideologias" class="form-input"></textarea></div>
+        <div class="form-group"><label class="form-label">Ferimentos e Cicatrizes</label><textarea id="ante-ferimentos" class="form-input"></textarea></div>
+        <div class="form-group"><label class="form-label">Pessoas Significativas</label><textarea id="ante-pessoas" class="form-input"></textarea></div>
+        <div class="form-group"><label class="form-label">Fobias e Manias</label><textarea id="ante-fobias" class="form-input"></textarea></div>
+        <div class="form-group"><label class="form-label">Locais Importantes</label><textarea id="ante-locais" class="form-input"></textarea></div>
+        <div class="form-group"><label class="form-label">Tomos, Feitiços e Artefatos</label><textarea id="ante-tomos" class="form-input"></textarea></div>
+        <div class="form-group"><label class="form-label">Pertences Queridos</label><textarea id="ante-pertences" class="form-input"></textarea></div>
+        <div class="form-group"><label class="form-label">Encontros com Entidades Estranhas</label><textarea id="ante-encontros" class="form-input"></textarea></div>
+      </div>
+
+      <div class="sw-skills-section-title">Equipamento e Dinheiro</div>
+      <div class="form-group"><label class="form-label">Equipamento e Pertences</label><textarea id="sw-equipment" class="form-input" placeholder="Itens, armas, objetos pessoais..." style="min-height:80px;"></textarea></div>
+      <div class="sw-ante-grid">
+        <div class="form-group"><label class="form-label">Nível de Gastos</label><input type="text" id="ante-nivel-gastos" class="form-input" /></div>
+        <div class="form-group"><label class="form-label">Dinheiro</label><input type="text" id="ante-dinheiro" class="form-input" /></div>
+        <div class="form-group"><label class="form-label">Patrimônio</label><input type="text" id="ante-patrimonio" class="form-input" /></div>
+        <div class="form-group"><label class="form-label">Nível de Crédito</label><input type="number" id="ante-credito" class="form-input" /></div>
+      </div>
+
+      <div class="sw-skills-section-title">Histórico / Trasfundo</div>
+      <textarea id="sw-backstory" class="form-input" placeholder="História pessoal do investigador..." style="min-height:100px;"></textarea>
+
+      <div style="overflow:hidden; margin-top:1rem;">
+        <button class="btn-back" onclick="goToStep(4)">← Voltar</button>
+        <button class="btn-save" onclick="finalizeSheet()">✦ Finalizar Ficha</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VISUALIZAÇÃO DA FICHA (ESTILO PDF) -->
+<div class="sheet-viewer-overlay" id="sheet-viewer-overlay">
+  <div class="sheet-viewer-box">
+    <div class="sheet-viewer-topbar">
+      <button class="btn-back" onclick="closeSheetViewer()">← Fechar</button>
+      <div class="sheet-viewer-tabs">
+        <span class="sv-tab active" id="sv-tab-1" onclick="switchViewerTab(1)">Ficha</span>
+        <span class="sv-tab" id="sv-tab-2" onclick="switchViewerTab(2)">Antecedentes</span>
+      </div>
+      <button class="btn-small primary-small" id="sv-edit-btn" onclick="openSheetWizard()">✎ Editar Ficha</button>
+    </div>
+
+    <!-- PÁGINA 1: FICHA -->
+    <div class="sv-page active" id="sv-page-1">
+      <div class="sv-header-row">
+        <div class="sv-header-field"><label>Nome</label><div id="sv-name" class="sv-header-value">—</div></div>
+        <div class="sv-header-field"><label>Ocupação</label><div id="sv-occupation" class="sv-header-value">—</div></div>
+        <div class="sv-header-field small"><label>Idade</label><div id="sv-age" class="sv-header-value">—</div></div>
+      </div>
+
+      <div class="sv-attrs-row" id="sv-attrs-row"></div>
+
+      <div class="sv-vitals-row">
+        <div class="sv-vital-box">
+          <div class="sv-vital-label">Pontos de Vida</div>
+          <div class="sv-vital-track" id="sv-pv-track"></div>
+          <div class="sv-vital-controls"><button onclick="adjustVital('pv', -1)">−</button><span id="sv-pv-text">0 / 0</span><button onclick="adjustVital('pv', 1)">+</button></div>
+        </div>
+        <div class="sv-vital-box">
+          <div class="sv-vital-label">Sanidade</div>
+          <div class="sv-vital-track" id="sv-san-track"></div>
+          <div class="sv-vital-controls"><button onclick="adjustVital('sanidade', -1)">−</button><span id="sv-san-text">0 / 0</span><button onclick="adjustVital('sanidade', 1)">+</button></div>
+        </div>
+        <div class="sv-vital-box">
+          <div class="sv-vital-label">Pontos de Magia</div>
+          <div class="sv-vital-track" id="sv-pm-track"></div>
+          <div class="sv-vital-controls"><button onclick="adjustVital('pm', -1)">−</button><span id="sv-pm-text">0 / 0</span><button onclick="adjustVital('pm', 1)">+</button></div>
+        </div>
+        <div class="sv-vital-box small">
+          <div class="sv-vital-label">Sorte</div>
+          <div class="sv-vital-controls"><button onclick="adjustVital('sorte', -1)">−</button><span id="sv-sorte-text">0</span><button onclick="adjustVital('sorte', 1)">+</button></div>
+        </div>
+      </div>
+
+      <div class="sv-derived-row" id="sv-derived-row"></div>
+
+      <div class="sv-section-title">Perícias do Investigador</div>
+      <div class="sv-skills-grid" id="sv-skills-grid"></div>
+
+      <div class="sv-section-title">Combate</div>
+      <div class="sv-weapons-table" id="sv-weapons-table"></div>
+    </div>
+
+    <!-- PÁGINA 2: ANTECEDENTES -->
+    <div class="sv-page" id="sv-page-2">
+      <div class="sv-ante-display-grid" id="sv-ante-display-grid"></div>
+      <div class="sv-section-title">Equipamento e Pertences</div>
+      <p class="sv-ante-text" id="sv-equipment-display"></p>
+      <div class="sv-section-title">Dinheiro e Recursos</div>
+      <div class="sv-money-row" id="sv-money-row"></div>
+      <div class="sv-section-title">Histórico</div>
+      <p class="sv-ante-text" id="sv-backstory-display"></p>
+      <div class="sv-section-title">Companheiros Investigadores</div>
+      <div class="sv-companions-grid" id="sv-companions-grid"></div>
+      <button class="btn-small" onclick="openAddCompanionModal()">+ Adicionar Companheiro</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADICIONAR COMPANHEIRO -->
+<div class="modal-overlay" id="add-companion-modal">
+  <div class="modal" style="max-width:420px">
+    <button class="modal-close" onclick="closeAddCompanionModal()">✕</button>
+    <h3 class="modal-title">Adicionar Companheiro Investigador</h3>
+    <select id="companion-select" class="form-input" style="margin-bottom:1rem;"></select>
+    <div class="modal-actions">
+      <button class="btn-small" onclick="closeAddCompanionModal()">Cancelar</button>
+      <button class="btn-small primary-small" onclick="confirmAddCompanion()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+<div class="roll-toast" id="roll-toast"></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
