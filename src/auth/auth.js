@@ -1,4 +1,5 @@
 import { sb } from '../lib/supabaseClient.js';
+import { escapeHtml } from '../lib/utils.js';
 
 export async function doLogin() {
     const email = (document.getElementById('login-email').value || '').trim();
