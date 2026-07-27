@@ -18,7 +18,7 @@ export async function doRegister() {
     const name = (document.getElementById('reg-name').value || '').trim();
     const email = (document.getElementById('reg-email').value || '').trim();
     const pass = document.getElementById('reg-password').value || '';
-    if (name.length < 2) return showError('Sem nome, sem dossiê', 'Diga como devemos catalogá-lo — ao menos duas letras.', 'hint');
+    if (name.length < 2) return showError('Sem nome, sem dossiê', 'Diga como devemos catalogá-lo, ao menos duas letras.', 'hint');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Endereço ilegível', 'Este endereço não corresponde a nenhum formato reconhecido.', 'hint');
     if (pass.length < 6) return showError('Senha frágil demais', 'Escolha ao menos seis caracteres. Coisas antigas escutam senhas curtas.', 'hint');
     const btn = document.querySelector('#tab-register .btn-primary');
