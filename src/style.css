@@ -190,8 +190,8 @@
     pointer-events: none;
   }
 
-  .login-card::after {
-    content: 'DECLARAÇÃO DE IDENTIDADE — USO RESTRITO';
+     .login-card::after {
+    content: 'DECLARAÇÃO DE IDENTIDADE · USO RESTRITO';
     position: absolute;
     top: 14px; left: 0; right: 0;
     text-align: center;
