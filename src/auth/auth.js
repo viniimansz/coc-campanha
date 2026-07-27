@@ -33,7 +33,7 @@ export async function doLogout() { await sb.auth.signOut(); }
 
 export function humanizeAuthError(msg, ctx) {
     const m = (msg || '').toLowerCase();
-    if (m.includes('invalid login') || m.includes('invalid credentials')) return 'Email ou senha não conferem com nenhum registro. Repasse o que digitou — o Arquivo é implacável com aproximações.';
+    if (m.includes('invalid login') || m.includes('invalid credentials')) return 'Email ou senha não conferem com nenhum registro. Repasse o que digitou, o Arquivo é implacável com aproximações.';
     if (m.includes('email not confirmed')) return 'Seu dossiê existe, mas ainda não foi selado. Confirme o email que enviamos antes de retornar.';
     if (m.includes('already registered') || m.includes('user already')) return 'Já existe um dossiê com este endereço. Tente entrar, ou recupere-o pelo correio.';
     if (m.includes('rate limit') || m.includes('too many')) return 'Excesso de tentativas. Aguarde alguns instantes antes de bater à porta outra vez.';
