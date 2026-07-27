@@ -4,7 +4,6 @@ import { defaultAvatarSvg } from './lib/utils.js';
 import { loadCampaigns } from './campaigns/campaigns.js';
 import { loadMyCharacters } from './characters/characters.js';
 import { loadProfile } from './profile/profile.js';
-import { sb, GUARDIAN_EMAIL } from './lib/supabaseClient.js';
 
 export async function init() {
     const { data: { session } } = await sb.auth.getSession();
