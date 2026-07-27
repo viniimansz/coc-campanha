@@ -24,7 +24,7 @@ let swSelectedChipId = null;
 
 const SW_STEP_META = {
   1: { title: 'Atributos', sub: 'Role os dados ou preencha os oito atributos base do seu investigador.' },
-  2: { title: 'Ocupação', sub: 'Escolha a profissão que abre portas — e algumas fechaduras.' },
+  2: { title: 'Ocupação', sub: 'Escolha a profissão que abre portas e fecha outras.' },
   3: { title: 'Perícias', sub: 'Distribua os pontos entre o que seu investigador aprendeu a fazer.' },
   4: { title: 'Combate', sub: 'Registre armas, defesas e o que ele carrega para o inevitável.' },
   5: { title: 'Antecedentes', sub: 'Costure a história, os medos e as pessoas que o mantêm de pé.' },
