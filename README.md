@@ -2,9 +2,6 @@
 
 Esse pacote é a refatoração do `index.html` monolítico (5419 linhas, tudo
 em um arquivo só) para um projeto Vite com CSS e JS separados por domínio.
-**Nenhuma lógica foi reescrita** — as 118 funções do app original foram
-extraídas e realocadas função por função, então o comportamento deve ser
-idêntico ao site atual. O que mudou é só a organização dos arquivos.
 
 ## Estrutura
 
