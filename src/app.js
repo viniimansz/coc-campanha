@@ -4,12 +4,25 @@ import { defaultAvatarSvg } from './lib/utils.js';
 import { loadCampaigns } from './campaigns/campaigns.js';
 import { loadMyCharacters } from './characters/characters.js';
 import { loadProfile } from './profile/profile.js';
+import { showRecoveryForm } from './auth/auth.js';
+
+// O link do email de recuperação volta com "type=recovery" na URL. Nesse caso
+// a pessoa já chega logada, mas precisa definir a senha antes de entrar.
+let recuperandoSenha = /type=recovery/.test(window.location.hash + window.location.search);
 
 export async function init() {
+    window.addEventListener('senha-redefinida', () => {
+      recuperandoSenha = false;
+      if (store.currentUser) enterApp();
+    });
     const { data: { session } } = await sb.auth.getSession();
-    if (session) { store.currentUser = session.user; enterApp(); }
+    if (session) { store.currentUser = session.user; if (recuperandoSenha) showRecoveryForm(); else enterApp(); }
     sb.auth.onAuthStateChange((event, session) => {
-      if (session) { store.currentUser = session.user; enterApp(); }
+      if (event === 'PASSWORD_RECOVERY') recuperandoSenha = true;
+      if (session) {
+        store.currentUser = session.user;
+        if (recuperandoSenha) showRecoveryForm(); else enterApp();
+      }
       else { store.currentUser = null; showLogin(); }
     });
   }
