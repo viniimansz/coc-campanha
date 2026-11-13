@@ -2,6 +2,7 @@ import { sb } from '../lib/supabaseClient.js';
 import { store } from '../lib/store.js';
 import { GUARDIAN_EMAIL } from '../lib/supabaseClient.js';
 import { loadCampaigns } from '../campaigns/campaigns.js';
+import { esc, safeUrl, jsArg } from '../lib/utils.js';
 
 let guardianProfilesById = {};
 
@@ -29,8 +30,8 @@ export async function loadGuardianPanel() {
       const campChars = (chars || []).filter(c => c.campaign_id === camp.id);
       html += `
         <div class="guardian-section-title" style="display:flex; align-items:center; justify-content:space-between; gap:0.8rem;">
-          <span>${camp.name} <span style="font-family:'Cormorant Garamond', serif; font-style:italic; font-size:0.8rem; color:var(--parchment-darker)">(${campChars.length} investigador${campChars.length === 1 ? '' : 'es'})</span></span>
-          <button class="btn-small" onclick="openEditCampaignModal('${camp.id}')" style="flex-shrink:0;">✎ Editar Campanha</button>
+          <span>${esc(camp.name)} <span style="font-family:'Cormorant Garamond', serif; font-style:italic; font-size:0.8rem; color:var(--parchment-darker)">(${campChars.length} investigador${campChars.length === 1 ? '' : 'es'})</span></span>
+          <button class="btn-small" onclick="openEditCampaignModal(${jsArg(camp.id)})" style="flex-shrink:0;">✎ Editar Campanha</button>
         </div>
         <div class="guardian-grid">
       `;
@@ -61,22 +62,22 @@ export function playerCardHtml(c) {
       ? (prof.nickname ? `${prof.display_name} (@${prof.nickname})` : prof.display_name)
       : (c.user_email ? c.user_email.split('@')[0] : 'desconhecido');
     const campaignOptions = ['<option value="">— Sem campanha —</option>']
-      .concat(store.allCampaigns.map(camp => `<option value="${camp.id}" ${camp.id === c.campaign_id ? 'selected' : ''}>${camp.name}</option>`))
+      .concat(store.allCampaigns.map(camp => `<option value="${esc(camp.id)}" ${camp.id === c.campaign_id ? 'selected' : ''}>${esc(camp.name)}</option>`))
       .join('');
     return `
       <div class="player-card">
-        <div onclick="openPlayerModal(${JSON.stringify(c).replace(/"/g, '&quot;')})" style="cursor:pointer;">
-          ${c.avatar_url ? `<img class="player-card-img" src="${c.avatar_url}" />` : `<div class="player-card-img-placeholder">👤</div>`}
+        <div onclick="openPlayerModal(${jsArg(c)})" style="cursor:pointer;">
+          ${c.avatar_url ? `<img class="player-card-img" src="${esc(safeUrl(c.avatar_url))}" />` : `<div class="player-card-img-placeholder">👤</div>`}
         </div>
         <div class="player-card-body">
-          <div class="player-card-owner">🧑 ${playerLabel}</div>
-          <div class="player-card-name">${c.name || '(sem nome)'}</div>
-          <div class="player-card-occupation">${c.occupation || '—'}</div>
-          <select class="player-card-campaign-select" onclick="event.stopPropagation()" onchange="assignToCampaign('${c.id}', this.value)">
+          <div class="player-card-owner">🧑 ${esc(playerLabel)}</div>
+          <div class="player-card-name">${esc(c.name || '(sem nome)')}</div>
+          <div class="player-card-occupation">${esc(c.occupation || '—')}</div>
+          <select class="player-card-campaign-select" onclick="event.stopPropagation()" onchange="assignToCampaign(${jsArg(c.id)}, this.value)">
             ${campaignOptions}
           </select>
           <div class="player-card-actions">
-            ${c.ficha_url ? `<button class="btn-small primary-small" onclick="event.stopPropagation(); window.open('${c.ficha_url}', '_blank')">Ver Ficha</button>` : '<span style="font-size:0.7rem; opacity:0.6;">Sem ficha</span>'}
+            ${c.ficha_url ? `<button class="btn-small primary-small" onclick="event.stopPropagation(); window.open(${jsArg(safeUrl(c.ficha_url))}, '_blank')">Ver Ficha</button>` : '<span style="font-size:0.7rem; opacity:0.6;">Sem ficha</span>'}
           </div>
         </div>
       </div>
@@ -95,14 +96,14 @@ export function openPlayerModal(char) {
     document.getElementById('modal-player-name').textContent = char.name || 'Investigador';
     document.getElementById('modal-content').innerHTML = `
       <table style="width:100%; border-collapse:collapse; font-family: 'EB Garamond', serif; font-size:1rem; color: var(--ink-faded);">
-        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase; width:40%">Email</td><td>${char.user_email || '—'}</td></tr>
-        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Ocupação</td><td>${char.occupation || '—'}</td></tr>
-        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Idade</td><td>${char.age || '—'}</td></tr>
-        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Gênero</td><td>${char.gender || '—'}</td></tr>
-        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Naturalidade</td><td>${char.birthplace || '—'}</td></tr>
-        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Residência</td><td>${char.residence || '—'}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase; width:40%">Email</td><td>${esc(char.user_email || '—')}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Ocupação</td><td>${esc(char.occupation || '—')}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Idade</td><td>${esc(char.age || '—')}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Gênero</td><td>${esc(char.gender || '—')}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Naturalidade</td><td>${esc(char.birthplace || '—')}</td></tr>
+        <tr><td style="padding:0.3rem 0; font-family:'Cormorant Garamond', serif; font-size:0.7rem; color:var(--ink-light); text-transform:uppercase;">Residência</td><td>${esc(char.residence || '—')}</td></tr>
       </table>
-      ${char.ficha_url ? `<div style="margin-top:1.5rem"><button class="btn-small primary-small" onclick="window.open('${char.ficha_url}', '_blank')">📄 Abrir Ficha PDF</button></div>` : ''}
+      ${char.ficha_url ? `<div style="margin-top:1.5rem"><button class="btn-small primary-small" onclick="window.open(${jsArg(safeUrl(char.ficha_url))}, '_blank')">📄 Abrir Ficha PDF</button></div>` : ''}
     `;
     document.getElementById('player-modal').classList.add('open');
   }

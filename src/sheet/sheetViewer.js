@@ -1,5 +1,5 @@
 import { sb } from '../lib/supabaseClient.js';
-import { showToast } from '../lib/utils.js';
+import { showToast, esc, safeUrl, jsArg } from '../lib/utils.js';
 import { store } from '../lib/store.js';
 import { sheetStore } from './sheetStore.js';
 import { openSheetWizard } from './sheetWizard.js';
@@ -74,7 +74,7 @@ export function renderViewerPage1(char, sheet) {
 
     document.getElementById('sv-derived-row').innerHTML = `
       <div class="sv-derived-box"><div class="num">${sheet.movimento || 8}</div><div class="lab">Movimento</div></div>
-      <div class="sv-derived-box"><div class="num">${sheet.bonus_dano || '0'}</div><div class="lab">Bônus Dano</div></div>
+      <div class="sv-derived-box"><div class="num">${esc(sheet.bonus_dano || '0')}</div><div class="lab">Bônus Dano</div></div>
       <div class="sv-derived-box"><div class="num">${sheet.corpo ?? 0}</div><div class="lab">Corpo</div></div>
       <div class="sv-derived-box"><div class="num">${Math.floor((sheet.destreza||0)/2)}</div><div class="lab">Esquiva</div></div>
       <div class="sv-derived-box"><div class="num">${sheet.nivel_credito ?? 0}</div><div class="lab">Crédito</div></div>
@@ -90,11 +90,11 @@ export function renderViewerPage1(char, sheet) {
       const checked = checkedSkills.includes(ref.id);
       rows.push(`
         <div class="sv-skill-cell">
-          <div class="chk ${checked ? 'checked' : ''}" onclick="toggleSkillChecked('${ref.id}')"></div>
-          <span class="nm">${ref.name}</span>
+          <div class="chk ${checked ? 'checked' : ''}" onclick="toggleSkillChecked(${jsArg(ref.id)})"></div>
+          <span class="nm">${esc(ref.name)}</span>
           <span class="vl">${total}%</span>
           ${thirdsBox(total)}
-          <button class="sv-roll-btn" onclick="rollSkillTest('${ref.name.replace(/'/g, "\\'")}', ${total})" title="Rolar teste">🎲</button>
+          <button class="sv-roll-btn" onclick="rollSkillTest(${jsArg(ref.name)}, ${Number(total) || 0})" title="Rolar teste">🎲</button>
         </div>
       `);
     });
@@ -104,11 +104,11 @@ export function renderViewerPage1(char, sheet) {
       const checked = checkedSkills.includes(c.id);
       rows.push(`
         <div class="sv-skill-cell">
-          <div class="chk ${checked ? 'checked' : ''}" onclick="toggleSkillChecked('${c.id}')"></div>
-          <span class="nm">${c.name}</span>
-          <span class="vl">${c.value || 0}%</span>
+          <div class="chk ${checked ? 'checked' : ''}" onclick="toggleSkillChecked(${jsArg(c.id)})"></div>
+          <span class="nm">${esc(c.name)}</span>
+          <span class="vl">${Number(c.value) || 0}%</span>
           ${thirdsBox(c.value || 0)}
-          <button class="sv-roll-btn" onclick="rollSkillTest('${c.name.replace(/'/g, "\\'")}', ${c.value || 0})" title="Rolar teste">🎲</button>
+          <button class="sv-roll-btn" onclick="rollSkillTest(${jsArg(c.name)}, ${Number(c.value) || 0})" title="Rolar teste">🎲</button>
         </div>
       `);
     });
@@ -119,7 +119,7 @@ export function renderViewerPage1(char, sheet) {
     let wHtml = `<div class="sv-weapon-line header"><span>Arma</span><span>Reg.</span><span>Dif.</span><span>Ext.</span><span>Dano</span><span>Alcance</span><span>Ataq.</span></div>`;
     wHtml += `<div class="sv-weapon-line"><span>Desarmado</span><span>${sheet.skills?.luta_briga || 25}</span><span>${Math.floor((sheet.skills?.luta_briga || 25)/2)}</span><span>${Math.floor((sheet.skills?.luta_briga || 25)/5)}</span><span>1d3+BD</span><span>—</span><span>1</span></div>`;
     weapons.forEach(w => {
-      wHtml += `<div class="sv-weapon-line"><span>${w.name || '—'}</span><span>${w.regular || 0}</span><span>${w.dificil || 0}</span><span>${w.extremo || 0}</span><span>${w.dano || '—'}</span><span>${w.alcance || '—'}</span><span>${w.ataques || 1}</span></div>`;
+      wHtml += `<div class="sv-weapon-line"><span>${esc(w.name || '—')}</span><span>${esc(w.regular || 0)}</span><span>${esc(w.dificil || 0)}</span><span>${esc(w.extremo || 0)}</span><span>${esc(w.dano || '—')}</span><span>${esc(w.alcance || '—')}</span><span>${esc(w.ataques || 1)}</span></div>`;
     });
     weaponsTable.innerHTML = wHtml;
   }
@@ -188,7 +188,7 @@ export async function renderViewerPage2(char, sheet) {
       ['Pertences Queridos', a.pertences_queridos], ['Encontros com Entidades Estranhas', a.encontros_estranhos]
     ];
     document.getElementById('sv-ante-display-grid').innerHTML = fields.map(([label, val]) => `
-      <div class="sv-ante-box"><label>${label}</label><div class="txt">${val || '—'}</div></div>
+      <div class="sv-ante-box"><label>${label}</label><div class="txt">${esc(val || '—')}</div></div>
     `).join('');
 
     document.getElementById('sv-equipment-display').textContent = sheet.equipment || '—';
@@ -196,9 +196,9 @@ export async function renderViewerPage2(char, sheet) {
 
     const d = sheet.dinheiro || {};
     document.getElementById('sv-money-row').innerHTML = `
-      <div class="sv-ante-box"><label>Nível de Gastos</label><div class="txt">${d.nivel_gastos || '—'}</div></div>
-      <div class="sv-ante-box"><label>Dinheiro</label><div class="txt">${d.dinheiro || '—'}</div></div>
-      <div class="sv-ante-box"><label>Patrimônio</label><div class="txt">${d.patrimonio || '—'}</div></div>
+      <div class="sv-ante-box"><label>Nível de Gastos</label><div class="txt">${esc(d.nivel_gastos || '—')}</div></div>
+      <div class="sv-ante-box"><label>Dinheiro</label><div class="txt">${esc(d.dinheiro || '—')}</div></div>
+      <div class="sv-ante-box"><label>Patrimônio</label><div class="txt">${esc(d.patrimonio || '—')}</div></div>
     `;
 
     await renderCompanions(sheetStore.svCurrentCharId);
@@ -215,9 +215,9 @@ export async function renderCompanions(charId) {
 
     grid.innerHTML = links.map(link => `
       <div class="sv-companion-card">
-        <button class="sv-companion-remove" onclick="removeCompanion('${link.id}')">✕</button>
-        ${link.linked && link.linked.avatar_url ? `<img src="${link.linked.avatar_url}" />` : `<div style="width:100%; height:80px; background:var(--parchment-dark); display:flex; align-items:center; justify-content:center; font-size:1.5rem;">👤</div>`}
-        <div class="nm">${link.linked ? link.linked.name : '(desconhecido)'}</div>
+        <button class="sv-companion-remove" onclick="removeCompanion(${jsArg(link.id)})">✕</button>
+        ${link.linked && link.linked.avatar_url ? `<img src="${esc(safeUrl(link.linked.avatar_url))}" />` : `<div style="width:100%; height:80px; background:var(--parchment-dark); display:flex; align-items:center; justify-content:center; font-size:1.5rem;">👤</div>`}
+        <div class="nm">${esc(link.linked ? link.linked.name : '(desconhecido)')}</div>
       </div>
     `).join('');
   }
@@ -225,7 +225,7 @@ export async function renderCompanions(charId) {
 export async function openAddCompanionModal() {
     const { data: others } = await sb.from('characters').select('id, name').neq('id', sheetStore.svCurrentCharId);
     const sel = document.getElementById('companion-select');
-    sel.innerHTML = (others || []).map(c => `<option value="${c.id}">${c.name || '(sem nome)'}</option>`).join('') || '<option value="">Nenhum outro personagem encontrado</option>';
+    sel.innerHTML = (others || []).map(c => `<option value="${esc(c.id)}">${esc(c.name || '(sem nome)')}</option>`).join('') || '<option value="">Nenhum outro personagem encontrado</option>';
     document.getElementById('add-companion-modal').classList.add('open');
   }
 

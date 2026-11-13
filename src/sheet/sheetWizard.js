@@ -1,5 +1,5 @@
 import { sb } from '../lib/supabaseClient.js';
-import { showToast } from '../lib/utils.js';
+import { showToast, esc, jsArg } from '../lib/utils.js';
 import { store } from '../lib/store.js';
 import { sheetStore } from './sheetStore.js';
 import { openSheetViewer } from './sheetViewer.js';
@@ -253,9 +253,9 @@ export function renderOccupationsList() {
     list.innerHTML = filtered.map(o => {
       const formula = o.skill_points_formula.replace(/EDU/g, '<b>EDU</b>').replace(/FOR/g, '<b>FOR</b>').replace(/DES/g, '<b>DES</b>').replace(/APA/g, '<b>APA</b>');
       return `
-      <div class="occupation-card ${swState.occupationId === o.id ? 'selected' : ''}" onclick="selectOccupation('${o.id}')">
-        <div class="occupation-card-name">${o.name}</div>
-        <div class="occupation-card-desc">${o.description || ''}</div>
+      <div class="occupation-card ${swState.occupationId === o.id ? 'selected' : ''}" onclick="selectOccupation(${jsArg(o.id)})">
+        <div class="occupation-card-name">${esc(o.name)}</div>
+        <div class="occupation-card-desc">${esc(o.description || '')}</div>
         <div class="occupation-card-meta">Pontos: ${formula} • Crédito: ${o.credit_rating_min}-${o.credit_rating_max}</div>
       </div>
     `;
@@ -322,7 +322,7 @@ export function renderOccupationSkills(occ) {
       const total = base + allocated + (swState.skillAllocation[skillId]?.pers || 0);
       return `
         <div class="sw-skill-row">
-          <span class="sw-skill-name">${ref.name} <span class="sw-skill-base">(base ${base})</span></span>
+          <span class="sw-skill-name">${esc(ref.name)} <span class="sw-skill-base">(base ${base})</span></span>
           <div class="sw-skill-controls">
             <button class="sw-skill-btn" onclick="adjustSkillPoints('${skillId}', 'occ', -5)">−</button>
             <span class="sw-skill-total">${total}</span>
@@ -345,11 +345,11 @@ export function renderAllSkills() {
       const total = base + allocated + (swState.skillAllocation[ref.id]?.occ || 0);
       return `
         <div class="sw-skill-row">
-          <span class="sw-skill-name">${ref.name} <span class="sw-skill-base">(base ${base})</span></span>
+          <span class="sw-skill-name">${esc(ref.name)} <span class="sw-skill-base">(base ${base})</span></span>
           <div class="sw-skill-controls">
-            <button class="sw-skill-btn" onclick="adjustSkillPoints('${ref.id}', 'pers', -5)">−</button>
+            <button class="sw-skill-btn" onclick="adjustSkillPoints(${jsArg(ref.id)}, 'pers', -5)">−</button>
             <span class="sw-skill-total">${total}</span>
-            <button class="sw-skill-btn" onclick="adjustSkillPoints('${ref.id}', 'pers', 5)">+</button>
+            <button class="sw-skill-btn" onclick="adjustSkillPoints(${jsArg(ref.id)}, 'pers', 5)">+</button>
             ${skillThirdsHtml(total)}
           </div>
         </div>
@@ -427,9 +427,9 @@ export function renderCustomSkills() {
     const container = document.getElementById('sw-custom-skills');
     container.innerHTML = swState.customSkills.map(c => `
       <div class="sw-custom-skill-row">
-        <input type="text" placeholder="Ex: Língua (Francês), Ciência (Química)..." value="${c.name || ''}" oninput="updateCustomSkillName('${c.id}', this.value)" />
-        <input type="number" min="0" max="99" value="${c.value || 0}" oninput="updateCustomSkillValue('${c.id}', this.value)" />
-        <button class="sw-custom-skill-remove" onclick="removeCustomSkillRow('${c.id}')">✕</button>
+        <input type="text" placeholder="Ex: Língua (Francês), Ciência (Química)..." value="${esc(c.name || '')}" oninput="updateCustomSkillName(${jsArg(c.id)}, this.value)" />
+        <input type="number" min="0" max="99" value="${esc(c.value || 0)}" oninput="updateCustomSkillValue(${jsArg(c.id)}, this.value)" />
+        <button class="sw-custom-skill-remove" onclick="removeCustomSkillRow(${jsArg(c.id)})">✕</button>
       </div>
     `).join('') || '<span style="font-family:\'Cormorant Garamond\'; font-style:italic; color:var(--ink-light); font-size:0.85rem;">Nenhuma perícia personalizada ainda.</span>';
   }
@@ -462,16 +462,16 @@ export function renderWeaponsStep() {
     const container = document.getElementById('sw-weapons-list');
     container.innerHTML = swState.weapons.map(w => `
       <div class="sw-weapon-row">
-        <div><label>Arma</label><input type="text" value="${w.name || ''}" oninput="updateWeaponField('${w.id}', 'name', this.value)" placeholder="Ex: Revólver .38" /></div>
-        <div><label>Regular %</label><input type="number" value="${w.regular || 0}" oninput="updateWeaponField('${w.id}', 'regular', this.value)" /></div>
-        <div><label>Difícil %</label><input type="text" value="${w.dificil || 0}" readonly style="opacity:0.7;" /></div>
-        <div><label>Extremo %</label><input type="text" value="${w.extremo || 0}" readonly style="opacity:0.7;" /></div>
-        <div><label>Dano</label><input type="text" value="${w.dano || ''}" oninput="updateWeaponField('${w.id}', 'dano', this.value)" placeholder="1d10" /></div>
-        <div><label>Alcance</label><input type="text" value="${w.alcance || ''}" oninput="updateWeaponField('${w.id}', 'alcance', this.value)" /></div>
-        <div><label>Ataques</label><input type="number" value="${w.ataques || 1}" oninput="updateWeaponField('${w.id}', 'ataques', this.value)" /></div>
-        <div><label>Munição</label><input type="text" value="${w.municao || ''}" oninput="updateWeaponField('${w.id}', 'municao', this.value)" /></div>
-        <div><label>Defeito</label><input type="text" value="${w.defeito || ''}" oninput="updateWeaponField('${w.id}', 'defeito', this.value)" /></div>
-        <div class="sw-weapon-remove-wrap"><button class="sw-custom-skill-remove" onclick="removeWeaponRow('${w.id}')">✕</button></div>
+        <div><label>Arma</label><input type="text" value="${esc(w.name || '')}" oninput="updateWeaponField(${jsArg(w.id)}, 'name', this.value)" placeholder="Ex: Revólver .38" /></div>
+        <div><label>Regular %</label><input type="number" value="${esc(w.regular || 0)}" oninput="updateWeaponField(${jsArg(w.id)}, 'regular', this.value)" /></div>
+        <div><label>Difícil %</label><input type="text" value="${esc(w.dificil || 0)}" readonly style="opacity:0.7;" /></div>
+        <div><label>Extremo %</label><input type="text" value="${esc(w.extremo || 0)}" readonly style="opacity:0.7;" /></div>
+        <div><label>Dano</label><input type="text" value="${esc(w.dano || '')}" oninput="updateWeaponField(${jsArg(w.id)}, 'dano', this.value)" placeholder="1d10" /></div>
+        <div><label>Alcance</label><input type="text" value="${esc(w.alcance || '')}" oninput="updateWeaponField(${jsArg(w.id)}, 'alcance', this.value)" /></div>
+        <div><label>Ataques</label><input type="number" value="${esc(w.ataques || 1)}" oninput="updateWeaponField(${jsArg(w.id)}, 'ataques', this.value)" /></div>
+        <div><label>Munição</label><input type="text" value="${esc(w.municao || '')}" oninput="updateWeaponField(${jsArg(w.id)}, 'municao', this.value)" /></div>
+        <div><label>Defeito</label><input type="text" value="${esc(w.defeito || '')}" oninput="updateWeaponField(${jsArg(w.id)}, 'defeito', this.value)" /></div>
+        <div class="sw-weapon-remove-wrap"><button class="sw-custom-skill-remove" onclick="removeWeaponRow(${jsArg(w.id)})">✕</button></div>
       </div>
     `).join('') || '<span style="font-family:\'Cormorant Garamond\'; font-style:italic; color:var(--ink-light); font-size:0.85rem;">Nenhuma arma adicionada. "Desarmado" sempre conta como opção básica de combate.</span>';
   }

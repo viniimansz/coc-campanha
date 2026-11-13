@@ -1,7 +1,7 @@
 import { sb } from '../lib/supabaseClient.js';
 import { store } from '../lib/store.js';
 import { MAX_CHARACTERS } from '../lib/supabaseClient.js';
-import { showToast } from '../lib/utils.js';
+import { showToast, esc, safeUrl, jsArg } from '../lib/utils.js';
 
 let avatarFile = null;
 
@@ -27,11 +27,11 @@ export function renderCharList() {
     let html = store.myCharacters.map(c => {
       const campaign = store.allCampaigns.find(camp => camp.id === c.campaign_id);
       return `
-        <div class="char-list-card" onclick="openCharEditor('${c.id}')">
-          ${c.avatar_url ? `<img class="char-list-card-img" src="${c.avatar_url}" />` : `<div class="char-list-card-img-placeholder">👤</div>`}
+        <div class="char-list-card" onclick="openCharEditor(${jsArg(c.id)})">
+          ${c.avatar_url ? `<img class="char-list-card-img" src="${esc(safeUrl(c.avatar_url))}" />` : `<div class="char-list-card-img-placeholder">👤</div>`}
           <div class="char-list-card-body">
-            <div class="char-list-card-name">${c.name || '(sem nome)'}</div>
-            <div class="char-list-card-camp ${campaign ? '' : 'none'}">${campaign ? campaign.name : 'Sem campanha'}</div>
+            <div class="char-list-card-name">${esc(c.name || '(sem nome)')}</div>
+            <div class="char-list-card-camp ${campaign ? '' : 'none'}">${esc(campaign ? campaign.name : 'Sem campanha')}</div>
           </div>
         </div>
       `;
@@ -95,7 +95,7 @@ export function openCharEditor(id) {
 
         if (c.avatar_url) {
           document.getElementById('avatar-container').innerHTML = `
-            <img src="${c.avatar_url}" class="char-avatar" onclick="document.getElementById('avatar-input').click()" />
+            <img src="${esc(safeUrl(c.avatar_url))}" class="char-avatar" onclick="document.getElementById('avatar-input').click()" />
             <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="handleAvatarChange(event)" />
           `;
         }

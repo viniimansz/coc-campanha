@@ -1,6 +1,6 @@
 import { sb } from '../lib/supabaseClient.js';
 import { store } from '../lib/store.js';
-import { showToast } from '../lib/utils.js';
+import { showToast, esc } from '../lib/utils.js';
 
 export async function loadNotes() {
     const campaignId = store.currentCampaignId;
@@ -20,9 +20,9 @@ export async function loadNotes() {
 
     list.innerHTML = data.map(n => `
       <div class="note-card">
-        <div class="note-session">${n.session || 'Nota Geral'}</div>
-        <div class="note-title">${n.title}</div>
-        <div class="note-content">${n.content}</div>
+        <div class="note-session">${esc(n.session || 'Nota Geral')}</div>
+        <div class="note-title">${esc(n.title)}</div>
+        <div class="note-content">${esc(n.content)}</div>
         <div class="note-date">${new Date(n.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })}</div>
       </div>
     `).join('');
