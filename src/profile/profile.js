@@ -1,6 +1,6 @@
 import { sb } from '../lib/supabaseClient.js';
 import { store } from '../lib/store.js';
-import { showToast, defaultAvatarSvg } from '../lib/utils.js';
+import { showToast, defaultAvatarSvg, esc, safeUrl, jsArg } from '../lib/utils.js';
 import { loadMyCharacters } from '../characters/characters.js';
 
 export async function loadProfile() {
@@ -22,7 +22,7 @@ export async function loadProfile() {
 
     const coverContainer = document.getElementById('profile-cover-container');
     if (store.profileData.cover_url) {
-      coverContainer.innerHTML = `<img class="profile-cover" src="${store.profileData.cover_url}" />`;
+      coverContainer.innerHTML = `<img class="profile-cover" src="${esc(safeUrl(store.profileData.cover_url))}" />`;
     } else {
       coverContainer.innerHTML = `<div class="profile-cover-placeholder">Sem capa definida</div>`;
     }
@@ -118,11 +118,11 @@ export async function loadProfileCharGrid() {
     grid.innerHTML = store.myCharacters.map(c => {
       const campaign = store.allCampaigns.find(camp => camp.id === c.campaign_id);
       return `
-        <div class="char-list-card" onclick="showPage('character'); openCharEditor('${c.id}')">
-          ${c.avatar_url ? `<img class="char-list-card-img" src="${c.avatar_url}" />` : `<div class="char-list-card-img-placeholder">👤</div>`}
+        <div class="char-list-card" onclick="showPage('character'); openCharEditor(${jsArg(c.id)})">
+          ${c.avatar_url ? `<img class="char-list-card-img" src="${esc(safeUrl(c.avatar_url))}" />` : `<div class="char-list-card-img-placeholder">👤</div>`}
           <div class="char-list-card-body">
-            <div class="char-list-card-name">${c.name || '(sem nome)'}</div>
-            <div class="char-list-card-camp ${campaign ? '' : 'none'}">${campaign ? campaign.name : 'Sem campanha'}</div>
+            <div class="char-list-card-name">${esc(c.name || '(sem nome)')}</div>
+            <div class="char-list-card-camp ${campaign ? '' : 'none'}">${esc(campaign ? campaign.name : 'Sem campanha')}</div>
           </div>
         </div>
       `;

@@ -31,6 +31,38 @@ export async function doRegister() {
 
 export async function doLogout() { await sb.auth.signOut(); }
 
+export async function doForgotPassword() {
+    const email = (document.getElementById('login-email').value || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Endereço necessário', 'Escreva no campo acima o email do seu dossiê e clique de novo em "Esqueci minha senha".', 'hint');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    if (error) return showError('O correio falhou', humanizeAuthError(error.message, 'reset'));
+    showSuccess('Correio enviado', 'Se houver um dossiê com este endereço, chegará um link para criar uma nova senha. Confira também o spam.');
+  }
+
+// Chamado quando a pessoa volta pelo link do email de recuperação.
+export function showRecoveryForm() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('setup-screen').style.display = 'none';
+    document.querySelector('.tab-group').classList.add('hidden');
+    document.getElementById('tab-login').classList.add('hidden');
+    document.getElementById('tab-register').classList.add('hidden');
+    document.getElementById('tab-recovery').classList.remove('hidden');
+    showSuccess('Quase lá', 'Defina abaixo a nova senha do seu dossiê.');
+  }
+
+export async function doSetNewPassword() {
+    const pass = document.getElementById('recovery-password').value || '';
+    if (pass.length < 6) return showError('Senha frágil demais', 'Escolha ao menos seis caracteres.', 'hint');
+    const { error } = await sb.auth.updateUser({ password: pass });
+    if (error) return showError('Não foi possível trocar', humanizeAuthError(error.message, 'reset'));
+    document.getElementById('tab-recovery').classList.add('hidden');
+    document.querySelector('.tab-group').classList.remove('hidden');
+    document.getElementById('tab-login').classList.remove('hidden');
+    clearAuthError();
+    window.dispatchEvent(new Event('senha-redefinida'));
+  }
+
 export function humanizeAuthError(msg, ctx) {
     const m = (msg || '').toLowerCase();
     if (m.includes('invalid login') || m.includes('invalid credentials')) return 'Email ou senha não conferem com nenhum registro. Repasse o que digitou, o Arquivo é implacável com aproximações.';

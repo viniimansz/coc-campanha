@@ -1,6 +1,6 @@
 import { sb } from '../lib/supabaseClient.js';
 import { store } from '../lib/store.js';
-import { showToast } from '../lib/utils.js';
+import { showToast, esc, safeUrl, jsArg } from '../lib/utils.js';
 import { loadNotes } from '../notes/notes.js';
 
 let editCampaignId = null;
@@ -17,7 +17,7 @@ export async function loadCampaigns() {
 export function populateCharCampaignSelect(selectedId) {
     const sel = document.getElementById('char-campaign');
     sel.innerHTML = '<option value="">— Sem campanha —</option>' +
-      store.allCampaigns.map(c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.name}</option>`).join('');
+      store.allCampaigns.map(c => `<option value="${esc(c.id)}" ${c.id === selectedId ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
   }
 
 export async function createCampaign() {
@@ -47,7 +47,7 @@ export function openEditCampaignModal(campaignId) {
 
     const preview = document.getElementById('edit-campaign-cover-preview');
     if (camp.cover_url) {
-      preview.style.backgroundImage = `url('${camp.cover_url}')`;
+      preview.style.backgroundImage = `url('${safeUrl(camp.cover_url)}')`;
     } else {
       preview.style.backgroundImage = 'none';
     }
@@ -114,16 +114,16 @@ export async function renderCampaignsList() {
     (chars || []).forEach(c => { if (c.campaign_id) counts[c.campaign_id] = (counts[c.campaign_id] || 0) + 1; });
 
     grid.innerHTML = store.allCampaigns.map(camp => {
-      const bannerStyle = camp.cover_url ? `style="background-image:url('${camp.cover_url}'); background-size:cover; background-position:center;"` : '';
+      const bannerStyle = camp.cover_url ? `style="background-image:url('${esc(safeUrl(camp.cover_url))}'); background-size:cover; background-position:center;"` : '';
       return `
-      <div class="campaign-tile" onclick="openCampaignDetail('${camp.id}')">
+      <div class="campaign-tile" onclick="openCampaignDetail(${jsArg(camp.id)})">
         <div class="campaign-tile-banner" ${bannerStyle}>
           ${camp.cover_url ? '' : '🦑'}
           <span class="campaign-tile-count">${counts[camp.id] || 0} investigador${(counts[camp.id] || 0) === 1 ? '' : 'es'}</span>
         </div>
         <div class="campaign-tile-body">
-          <div class="campaign-tile-name">${camp.name}</div>
-          <div class="campaign-tile-desc">${camp.description || ''}</div>
+          <div class="campaign-tile-name">${esc(camp.name)}</div>
+          <div class="campaign-tile-desc">${esc(camp.description || '')}</div>
         </div>
       </div>
     `;
@@ -138,7 +138,7 @@ export function openCampaignDetail(campaignId) {
 
     const banner = document.getElementById('campaign-detail-banner');
     if (camp && camp.cover_url) {
-      banner.style.backgroundImage = `url('${camp.cover_url}')`;
+      banner.style.backgroundImage = `url('${safeUrl(camp.cover_url)}')`;
       banner.textContent = '';
     } else {
       banner.style.backgroundImage = 'none';
@@ -182,12 +182,12 @@ export async function loadCampaignRoster() {
       const prof = profilesById[c.user_id];
       const playerTag = prof && prof.nickname ? `@${prof.nickname}` : (prof && prof.display_name ? prof.display_name : '');
       return `
-      <div class="roster-card" onclick="openPublicProfile('${c.user_id}')" style="cursor:pointer;">
-        ${c.avatar_url ? `<img class="roster-card-img" src="${c.avatar_url}" />` : `<div class="roster-card-img-placeholder">👤</div>`}
+      <div class="roster-card" onclick="openPublicProfile(${jsArg(c.user_id)})" style="cursor:pointer;">
+        ${c.avatar_url ? `<img class="roster-card-img" src="${esc(safeUrl(c.avatar_url))}" />` : `<div class="roster-card-img-placeholder">👤</div>`}
         <div class="roster-card-body">
-          <div class="roster-card-name">${c.name || '(sem nome)'}</div>
-          <div class="roster-card-occupation">${c.occupation || '—'}</div>
-          ${playerTag ? `<div class="roster-card-player">jogado por ${playerTag}</div>` : ''}
+          <div class="roster-card-name">${esc(c.name || '(sem nome)')}</div>
+          <div class="roster-card-occupation">${esc(c.occupation || '—')}</div>
+          ${playerTag ? `<div class="roster-card-player">jogado por ${esc(playerTag)}</div>` : ''}
         </div>
       </div>
     `;

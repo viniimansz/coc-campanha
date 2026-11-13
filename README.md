@@ -1,90 +1,67 @@
-# O Arquivo de Londres — v2 (estrutura modular)
+# O Arquivo de Londres
 
-Esse pacote é a refatoração do `index.html` monolítico (5419 linhas, tudo
-em um arquivo só) para um projeto Vite com CSS e JS separados por domínio.
+Site para a campanha de *Chamado de Cthulhu* (RPG de mesa) que eu mestro com meus amigos. Cada jogador tem conta própria, cria investigadores, preenche a ficha passo a passo e acompanha as notas das sessões. O Guardião (mestre) tem um painel para organizar campanhas e personagens.
+
+> *A tabletop RPG companion site for a Call of Cthulhu campaign: player accounts, guided character sheets, session notes and a game-master panel. Vanilla JS + Vite on the front end, Supabase (Postgres, Auth, Storage, RLS) on the back end.*
+
+**No ar:** https://coc-campanha.vercel.app
+
+## O que o site faz
+
+- **Contas de jogador** com perfil (nome, apelido, bio, avatar e capa) e recuperação de senha por email
+- **Investigadores**: até 10 por jogador, com avatar e ficha em PDF
+- **Ficha guiada em 5 passos** (atributos, ocupação, perícias, armas e antecedentes), com cálculo automático de PV, PM, Sanidade, Movimento e Bônus de Dano
+- **Visualização da ficha** no estilo do livro, com rolagem de testes de perícia
+- **Campanhas** com capa, lista de investigadores e notas de sessão
+- **Painel do Guardião**: criar e editar campanhas, mover personagens entre campanhas e abrir as fichas de todos
+- **Tutorial guiado** para quem entra pela primeira vez
+
+## Tecnologias
+
+| Parte | Escolha |
+|---|---|
+| Front-end | HTML, CSS e JavaScript puro (módulos ES), empacotado com **Vite** |
+| Back-end | **Supabase**: Postgres, Auth (email e senha) e Storage |
+| Segurança | Row Level Security em todas as tabelas, upload restrito à pasta do próprio usuário, textos escapados antes de entrar no HTML |
+| Hospedagem | **Vercel** (publica sozinho a cada push na `main`) |
 
 ## Estrutura
 
 ```
-index.html              shell único com todo o HTML (mantido como pediu)
+index.html                 todas as telas (login, app, modais)
 src/
-  style.css              todo o CSS que estava em <style>
-  main.js                entrypoint: importa os módulos e cola no window
-  app.js                 bootstrap (init, login gate, setup obrigatório de perfil)
-  lib/
-    supabaseClient.js     cliente sb + constantes (URL, chave, email do Guardião, limite de personagens)
-    store.js               estado compartilhado (currentUser, myCharacters, allCampaigns, etc.)
-    utils.js               escapeHtml, showToast, defaultAvatarSvg
-  auth/auth.js             login, registro, logout, mensagens de erro
-  nav/nav.js                showPage, menu mobile
-  characters/characters.js  CRUD de investigadores, avatar, upload de PDF
-  campaigns/campaigns.js    CRUD de campanhas, listagem, detalhe, roster
-  sheet/
-    sheetStore.js           estado compartilhado só entre wizard e viewer
-    sheetWizard.js           os 5 passos da ficha CoC
-    sheetViewer.js           visualização estilo PDF, vitals, perícias, companheiros
-  profile/profile.js        perfil do jogador (bio, avatar, capa)
-  players/players.js        grid de membros + modal de perfil público
-  notes/notes.js            anotações de campo por campanha
-  guardian/guardian.js      painel do Guardião
-  tutorial/tutorial.js       tour guiado + checklist (cópia quase 1:1 do original)
+  main.js                  entrada: importa os módulos e expõe as funções no window
+  app.js                   inicialização, sessão e setup obrigatório de perfil
+  lib/                     cliente Supabase, estado compartilhado e utilitários (esc, safeUrl)
+  auth/                    login, cadastro e recuperação de senha
+  characters/              CRUD de investigadores, avatar e PDF
+  sheet/                   ficha guiada (wizard) e visualização
+  campaigns/  notes/       campanhas, elenco e notas de sessão
+  players/  profile/       perfis públicos e o próprio perfil
+  guardian/                painel do mestre
+  tutorial/                tour guiado
+supabase/migrations/       esquema do banco, regras de acesso e correções
 ```
 
-## Por que ficou assim
-
-- **`store` / `sheetStore`**: no original, o app usava variáveis `let` soltas
-  no topo do `<script>` (ex: `let currentUser = null;`). Módulos ES não
-  compartilham escopo, então isso virou um objeto único importado por
-  referência (`store.currentUser`) — qualquer arquivo que importar `store`
-  lê e escreve o mesmo estado. `sheetStore` existe à parte porque só
-  wizard e viewer de ficha precisam compartilhar isso (referências de
-  perícia/ocupação, personagem atual da visualização).
-- **`window`**: o HTML ainda chama tudo via `onclick="funcao(...)"` (não
-  migramos pra `addEventListener` — isso é o próximo passo natural, mas é
-  uma mudança maior e achei melhor não misturar com a separação de arquivos).
-  Como módulos ES não jogam nada no escopo global, o `main.js` importa
-  cada módulo como namespace e faz `Object.assign(window, Modulo)`. Isso
-  preserva 100% dos `onclick` do HTML sem precisar editar um por um.
-- **`sheetWizard.js` ↔ `sheetViewer.js`**: import circular intencional
-  (wizard chama `openSheetViewer` ao terminar de editar; viewer chama
-  `openSheetWizard` ao clicar em editar). ESM lida bem com isso desde que
-  o uso aconteça dentro de função, não no topo do módulo — é o caso aqui.
-
-## Rodando local
+## Rodando localmente
 
 ```bash
 npm install
 npm run dev       # http://localhost:5173
 npm run build     # gera dist/
-npm run preview   # serve o build de produção localmente
 ```
 
-## Deploy no Vercel
+A URL do projeto e a chave **publicável** do Supabase ficam em `src/lib/supabaseClient.js`. Essa chave pode ficar no código: quem protege os dados são as regras de RLS do banco.
 
-O projeto já builda limpo com `vite build` → `dist/`. No painel do Vercel:
+## Banco de dados
 
-1. Import do repo GitHub `coc-campanha` normalmente.
-2. Framework preset: **Vite** (o Vercel detecta sozinho pelo `package.json`).
-3. Build command: `vite build` (default) — Output directory: `dist` (default).
-4. Nenhuma env var é necessária: a URL e a chave pública do Supabase estão
-   em `src/lib/supabaseClient.js` (são a chave `publishable`, então tudo
-   bem ela estar no bundle do client, é o mesmo padrão do site atual).
+O esquema completo está em `supabase/migrations/`:
 
-Só isso — não precisa mexer em domínio nem em nada do Supabase (schema,
-policies, storage continuam exatamente iguais).
+- `0001_esquema_inicial.sql`: tabelas, chaves, gatilhos, regras de acesso e o bucket `characters`
+- `0002_seguranca.sql`: fecha brechas de permissão (upload de arquivos por qualquer pessoa, criação de notas sem ser o Guardião e leitura dos dados sem login)
 
-## O que NÃO mudou (de propósito)
+## Próximos passos
 
-- Nenhuma policy, tabela ou storage do Supabase foi tocada.
-- Nenhuma função foi reescrita ou "melhorada" — é extração pura, pra você
-  poder revisar/comparar com o `index.html` antigo função por função se
-  quiser.
-- O HTML continua em um arquivo só (`index.html`), como você pediu.
-
-## Próximos passos sugeridos (não feitos aqui)
-
-- Trocar os `onclick=""` inline por `addEventListener` — hoje funciona
-  via `window`, mas é um remanescente do modelo antigo.
-- Separar o `index.html` em templates por página, se um dia quiser.
-- Resolver os blocos `PROVISÓRIO` do `schema.sql` (characters/notes) —
-  combinamos deixar isso de fora desta rodada.
+- Trocar os `onclick` do HTML por `addEventListener`
+- Separar o `index.html` em templates por página
+- Configurar um SMTP próprio no Supabase para os emails de recuperação de senha chegarem a todos os jogadores
